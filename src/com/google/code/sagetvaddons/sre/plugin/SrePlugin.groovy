@@ -19,13 +19,13 @@ import org.apache.log4j.Logger
 import org.apache.log4j.PropertyConfigurator
 
 import sage.SageTVPluginRegistry
+import sagex.SageAPI
 import sagex.api.AiringAPI
-import sagex.api.ShowAPI
 import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
 
-import com.google.code.sagetvaddons.sre.plugin.engine.MonitorThread
+import com.google.code.sagetvaddons.sre.engine.MonitorThread
 import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
 import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
 
@@ -34,7 +34,7 @@ import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
  *
  */
 public final class SrePlugin extends AbstractPlugin {
-	static { PropertyConfigurator.configure('plugins/sre4/sre4.log4j.properties') }
+	static { PropertyConfigurator.configure(!SageAPI.isRemote() ? 'plugins/sre4/' : '' + 'sre4.log4j.properties') }
 	static private final Logger LOG = Logger.getLogger(SrePlugin)
 	static private SrePlugin INSTANCE = null
 	static SrePlugin get() { return INSTANCE }
@@ -77,20 +77,20 @@ public final class SrePlugin extends AbstractPlugin {
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_INTEGER, PROP_POST_PAD, '0', 'Post Game Padding (mins)', 'How many minutes should SRE pad a recording after it\'s over?  Zero means no extra pad.  Use this for \'post game show\' type padding.', new IntegerRangeValidator(0, 120))
 		addProperty(p)
-		p = new ServerStoredProperty(CONFIG_BOOL, PROP_END_EARLY, 'false', 'End Recordings Early', 'Should SRE end monitoring recordings early if the event ends early?')
+		p = new ServerStoredProperty(CONFIG_BOOL, PROP_END_EARLY, 'false', 'End Recordings Early', 'Should SRE end monitored recordings early if the event ends early?')
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_RM_MAN_FLAG, 'true', 'Remove Manual Flag for Favourites', 'Should SRE remove the manual flag for monitored favourites when the recording ends?')
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_IGNORE_B2B, 'false', 'Ignore Back to Back Recordings', 'Should SRE ignore the front half of back to back recordings?')
 		addProperty(p)
-		p = new ServerStoredProperty(CONFIG_BOOL, PROP_GEN_SYSMSG, 'false', 'Generate System Messages', 'Should SRE generate system messages when overrides may be need or other errors are detected with the plugin?')
+		p = new ServerStoredProperty(CONFIG_BOOL, PROP_GEN_SYSMSG, 'false', 'Generate System Messages', 'Should SRE generate system messages when overrides may be needed or other errors are detected with the plugin?')
 		addProperty(p)
 		INSTANCE = this
 	}
 	
 	@SageEvent('RecordingStarted')
 	void createMonitor(String eventName, Map args) {
-		if(!getMonitor(ShowAPI.GetShowExternalID(args['MediaFile']))) {
+		if(!getMonitor(AiringAPI.GetAiringID(args['MediaFile']))) {
 			MonitorThread t = new MonitorThread(args['MediaFile'])
 			monitors.add(t)
 			t.start()
@@ -100,7 +100,7 @@ public final class SrePlugin extends AbstractPlugin {
 	
 	@SageEvent('RecordingStopped')
 	void stopMonitor(String eventName, Map args) {
-		MonitorThread t = getMonitor(ShowAPI.GetShowExternalID(args['MediaFile']))
+		MonitorThread t = getMonitor(AiringAPI.GetAiringID(args['MediaFile']))
 		if(t) {
 			if(t.isAlive())
 				t.interrupt()

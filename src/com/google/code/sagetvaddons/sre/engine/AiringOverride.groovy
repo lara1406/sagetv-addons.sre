@@ -13,7 +13,7 @@
 *       See the License for the specific language governing permissions and
 *       limitations under the License.
 */
-package com.google.code.sagetvaddons.sre.plugin.engine
+package com.google.code.sagetvaddons.sre.engine
 
 class AiringOverride {
 	int id

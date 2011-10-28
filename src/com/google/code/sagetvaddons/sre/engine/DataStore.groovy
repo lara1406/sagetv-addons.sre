@@ -13,15 +13,15 @@
 *       See the License for the specific language governing permissions and
 *       limitations under the License.
 */
-package com.google.code.sagetvaddons.sre.plugin.engine
+package com.google.code.sagetvaddons.sre.engine
 
 import sagex.api.AiringAPI
 import sagex.api.ShowAPI
 import sagex.api.UserRecordAPI
 
 import com.google.code.livepvrdata4j.Client
+import com.google.code.sagetvaddons.sre.engine.MonitorThread.Status
 import com.google.code.sagetvaddons.sre.plugin.SrePlugin
-import com.google.code.sagetvaddons.sre.plugin.engine.MonitorThread.Status
 
 final class DataStore {
 
@@ -54,7 +54,7 @@ final class DataStore {
 	}
 
 	private void setData(def airing, String name, def value) {
-		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, AiringAPI.GetAiringID(airing)), name, value.toString())
+		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, AiringAPI.GetAiringID(airing).toString()), name, value.toString())
 	}
 
 	boolean hasOverride(def airing) {
@@ -76,7 +76,7 @@ final class DataStore {
 			setData(airing, PROP_TITLE, null)
 			setData(airing, PROP_SUBTITLE, null)
 			setData(airing, PROP_ENABLED, null)
-			setData(airing, PROP_STATUS, clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), AiringAPI.GetAiringStartTime(airing)))
+			setData(airing, PROP_STATUS, clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), new Date(AiringAPI.GetAiringStartTime(airing))))
 			setData(airing, PROP_LAST_CHECK, System.currentTimeMillis())
 			return true
 		}
@@ -167,7 +167,7 @@ final class DataStore {
 	}
 
 	Status newOverride(def airing, String title, String subtitle, boolean isEnabled) {
-		def status = isEnabled ? clnt.getStatus(title, subtitle, AiringAPI.GetAiringStartTime(airing)) : null
+		def status = isEnabled ? clnt.getStatus(title, subtitle, new Date(AiringAPI.GetAiringStartTime(airing))) : null
 		if(!isEnabled || !status.isError()) {
 			setData(airing, PROP_TITLE, title)
 			setData(airing, PROP_SUBTITLE, subtitle)

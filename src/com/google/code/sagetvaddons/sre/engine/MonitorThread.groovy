@@ -13,7 +13,7 @@
 *       See the License for the specific language governing permissions and
 *       limitations under the License.
 */
-package com.google.code.sagetvaddons.sre.plugin.engine
+package com.google.code.sagetvaddons.sre.engine
 
 import org.apache.log4j.Logger
 
@@ -76,7 +76,7 @@ class MonitorThread extends Thread {
 				LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
 				break
 			}
-			if(Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() && !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
+			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
 				if(!isUnmonitored()) {
 					boolean monitorLive = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
 					if(!ds.hasOverride(mediaFile) && !monitorLive && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
@@ -86,7 +86,7 @@ class MonitorThread extends Thread {
 						try {
 							def data = getAiringDetails()
 							LOG.debug "${logPreamble()}: Fetching status with data: $data"
-							response = clnt.getStatus(data[0], data[1], data[2])
+							response = clnt.getStatus(data[0], data[1], new Date(data[2]))
 							if(response == null) {
 								setUnmonitored(true)
 								LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."

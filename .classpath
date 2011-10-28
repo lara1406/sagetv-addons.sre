@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
 	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
@@ -11,5 +12,7 @@
 	<classpathentry kind="var" path="SAGELIB/httpclient-4.0.1.jar"/>
 	<classpathentry kind="var" path="SAGELIB/httpcore-4.0.1.jar"/>
 	<classpathentry kind="var" path="SAGELIB/gson-1.6.jar"/>
+	<classpathentry kind="var" path="SAGELIB/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="var" path="SAGELIB/json.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
