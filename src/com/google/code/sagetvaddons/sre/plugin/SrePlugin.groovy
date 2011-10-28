@@ -15,6 +15,9 @@
 */
 package com.google.code.sagetvaddons.sre.plugin
 
+import org.apache.log4j.Logger
+import org.apache.log4j.PropertyConfigurator
+
 import sage.SageTVPluginRegistry
 import sagex.api.AiringAPI
 import sagex.api.ShowAPI
@@ -31,6 +34,8 @@ import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
  *
  */
 public final class SrePlugin extends AbstractPlugin {
+	static { PropertyConfigurator.configure('plugins/sre4/sre4.log4j.properties') }
+	static private final Logger LOG = Logger.getLogger(SrePlugin)
 	static private SrePlugin INSTANCE = null
 	static SrePlugin get() { return INSTANCE }
 	
@@ -89,6 +94,7 @@ public final class SrePlugin extends AbstractPlugin {
 			MonitorThread t = new MonitorThread(args['MediaFile'])
 			monitors.add(t)
 			t.start()
+			LOG.debug "Monitor started for ${args['MediaFile']}"
 		}
 	}
 	
@@ -99,6 +105,7 @@ public final class SrePlugin extends AbstractPlugin {
 			if(t.isAlive())
 				t.interrupt()
 			monitors.remove t
+			LOG.debug "Monitor stopped for ${args['MediaFile']}"
 		}
 	}
 	
