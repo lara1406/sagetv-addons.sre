@@ -14,8 +14,6 @@ Please note that some features of this plugin are disabled without a sagetv-addo
        <Version beta="true">@@VER_NUM@@.@@BLD_NUM@@</Version>
        <ResourcePath>plugins/mc2xmlepg</ResourcePath>
        <Webpage>http://sagetv-addons.googlecode.com</Webpage>
-       <Webpage>http://code.google.com/p/sagetv-addons/wiki/Mc2XmlEpgUserGuide</Webpage>
-       <Webpage>http://mc2xml.dyndns.org/</Webpage>
        <ServerOnly>true</ServerOnly>
        <Dependency>
        		<JVM/>
@@ -49,22 +47,8 @@ Please note that some features of this plugin are disabled without a sagetv-addo
                <MD5>@@JAR_MD5@@</MD5>
                <Overwrite>true</Overwrite> <!-- Defaults to true -->
        </Package>
-       <Package>
-       			<PackageType>System</PackageType>
-       			<Location>http://sagetv-addons.googlecode.com/files/mc2xmlepg-conf-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
-       			<MD5>@@CONF_MD5@@</MD5>
-       			<Overwrite>false</Overwrite>
-       	</Package>
-       	<ImplementationClass>com.google.code.sagetvaddons.mc2xmlepg.plugin.Plugin</ImplementationClass>
+		<ImplementationClass>com.google.code.sagetvaddons.sre.plugin.SrePlugin</ImplementationClass>
        	<ReleaseNotes>
-* Fix bug with LineupEditor engine on Windows
- 
-* Add support for show generators (see user guide for more details)
- 
-* Properly add all subcategories of shows as separate entries
- 
-* Issue 307: Ignore loading data for disabled channels (major performance gain)
- 
-* Modifications to lineup editors and channel generators (see user guide for more details)
+Initial beta release.
        	</ReleaseNotes>
 </SageTVPlugin>

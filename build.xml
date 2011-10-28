@@ -68,20 +68,10 @@
   <target name="build" depends="javac" description="Build this project" />
 
   <target name="plugin" depends="build" description="Build entire SageTV plugin package">
-  	<delete dir="plugin" failonerror="false" />
-  	<property name="base" value="plugin/${app.res.dir}" />
-  	<copy todir="${base}">
-  	  <fileset dir=".">
-  	  	<include name="*.log4j.properties" />
-  	  </fileset>
-  	</copy>
   	<jar destfile="sre.jar" basedir="bld" />
   	<zip destfile="sre-jar-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sre.jar" />
   	<checksum file="sre-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
   	<replace file="sagetv.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
-  	<zip destfile="sre-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="plugin" />
-  	<checksum file="sre-conf-${app.ver}.${revision.max-with-flags}.zip" property="bin.conf.md5" />
-  	<replace file="sagetv.plugin.xml" token="@@CONF_MD5@@" value="${bin.conf.md5}" />
   </target>
 
   <target name="deliver" depends="plugin" description="Upload build to Google Code">
@@ -92,7 +82,6 @@
 	<fail message="gc.password must be defined in ${gc.upload.settings}" unless="gc.password" />
 	<taskdef classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask" name="gcupload" />
 	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sre-jar-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sre-jar-${app.ver}.${revision.max-with-flags}.zip" summary="SREv4 plugin snapshot build (plugin JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
-	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sre-conf-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sre-conf-${app.ver}.${revision.max-with-flags}.zip" summary="SREv4 plugin snapshot build (config files)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
   </target>
 
   <target name="submit" depends="deliver" description="Submit plugin to SageTV repository">
