@@ -1,15 +1,15 @@
 <SageTVPlugin>
-       <Name>mc2xml EPG Plugin</Name>
-       <Identifier>mc2xmlepg</Identifier>
-       <Description>
-Native SageTV plugin for accessing EPG data via mc2xml.
+       <Name>Sage Recording Extender (SRE)</Name>
+       <Identifier>sre</Identifier>
+	<Description><![CDATA[
+SRE monitors live events and extends the recording as necessary.  Don't let your recordings stop early and miss out on extra innings or overtime!
  
-Please read the user guide for this plugin CAREFULLY prior to installation!  There are special, additional steps required to install and uninstall this plugin.
+This plugin communicates with the Live PVR Data web service (http://www.livepvrdata.com) to determine if your recordings need to be extended because the recording is a live event.  Currently, the web service only supports monitoring of specific sporting events (NFL, NHL, MLB, NBA, NCAA football, NCAA basketball).  With this plugin enabled, all your recordings will be monitored against this web service and your recordings will be extended as necessary to ensure that you do not miss any portion of a live event because it runs longer than the EPG listings.
  
-Please note that some features of this plugin are disabled without a sagetv-addons license.  This is NOT the same as your SageTV server, client, or PlaceShifter software license.  It is separate and can be obtained from my project web site at http://sagetv-addons.googlecode.com
-       </Description>
+This plugin installs a web GUI app within the Jetty plugin for online viewing and configuration.  The SRE web app is installed at the /sre/ context within the Jetty plugin. 
+	]]></Description>
        <Author>Slugger</Author>
-       <CreationDate>2011.10.15</CreationDate>
+       <CreationDate>2007.03.27</CreationDate>
        <ModificationDate>@@MOD_DATE@@</ModificationDate>
        <Version beta="true">@@VER_NUM@@.@@BLD_NUM@@</Version>
        <ResourcePath>plugins/mc2xmlepg</ResourcePath>
@@ -42,7 +42,7 @@ Please note that some features of this plugin are disabled without a sagetv-addo
         </Dependency>
         <Dependency>
         	<Plugin>livepvrdata4j</Plugin>
-        	<MinVersion>1.0.0</MinVersin>
+        	<MinVersion>1.0.0</MinVersion>
         </Dependency>
        <PluginType>Standard</PluginType>
        <Package>
