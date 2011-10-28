@@ -97,6 +97,20 @@ public final class SrePlugin extends AbstractPlugin {
 			timer.cancel()
 		timer = new Timer(true)
 		timer.schedule(new DataStoreCleanupTask(), 10000, 3600000)
+		timer.schedule(new TimerTask() {
+			@Override
+			void run() {
+				synchronized(monitors) {
+					Iterator itr = monitors.iterator()
+					while(itr.hasNext()) {
+						MonitorThread t = itr.next()
+						if(!t.isAlive())
+							itr.remove()
+					}
+				}
+				LOG.debug "Dead monitor threads have been cleaned."
+			}
+		}, 120000, 3600000)
 	}
 	
 	@Override
