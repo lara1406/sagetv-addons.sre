@@ -78,8 +78,8 @@ class MonitorThread extends Thread {
 			}
 			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
 				if(!isUnmonitored()) {
-					boolean monitorLive = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
-					if(!ds.hasOverride(mediaFile) && !monitorLive && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
+					boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
+					if(!ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
 						setUnmonitored(true)
 						LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
 					} else {
@@ -92,12 +92,13 @@ class MonitorThread extends Thread {
 								LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."
 							} else
 								wasMonitored = true
+							processResponse()	
 						} catch(IOException e) {
 							LOG.error "${logPreamble()}: IOError", e
+							handleErrorResponse()
 						}
 					}
 				}
-				processResponse()
 			} else {
 				LOG.info "${logPreamble()}: Monitor disabled because ignore back to back is enabled and the next airing is scheduled to record."
 			}

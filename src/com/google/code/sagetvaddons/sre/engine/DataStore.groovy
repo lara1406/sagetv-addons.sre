@@ -15,7 +15,10 @@
 */
 package com.google.code.sagetvaddons.sre.engine
 
+import org.apache.log4j.Logger
+
 import sagex.api.AiringAPI
+import sagex.api.MediaFileAPI
 import sagex.api.ShowAPI
 import sagex.api.UserRecordAPI
 
@@ -24,7 +27,8 @@ import com.google.code.sagetvaddons.sre.engine.MonitorThread.Status
 import com.google.code.sagetvaddons.sre.plugin.SrePlugin
 
 final class DataStore {
-
+	static private final Logger LOG = Logger.getLogger(DataStore)
+	
 	static final String PROP_STATUS = 'status'
 	static final String PROP_TITLE = 'title'
 	static final String PROP_SUBTITLE = 'subtitle'
@@ -57,6 +61,19 @@ final class DataStore {
 		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, AiringAPI.GetAiringID(airing).toString()), name, value.toString())
 	}
 
+	void clean() {
+		UserRecordAPI.GetAllUserRecords(SrePlugin.PLUGIN_ID).each { r ->
+			def id = UserRecordAPI.GetUserRecordData(r, PROP_ID).toInteger()
+			def air = AiringAPI.GetAiringForID(id)
+			if(!air || (AiringAPI.GetScheduleStartTime(air) < System.currentTimeMillis() && !MediaFileAPI.IsFileCurrentlyRecording(AiringAPI.GetMediaFileForAiring(air)))) {
+				if(UserRecordAPI.DeleteUserRecord(r))
+					LOG.info "Deleted UserRecord for $id"
+				else
+					LOG.error "Failed to delete UserRecord for $id"
+			}
+		}
+	}
+	
 	boolean hasOverride(def airing) {
 		return getData(airing, PROP_ENABLED)?.length() > 0
 	}
@@ -76,7 +93,9 @@ final class DataStore {
 			setData(airing, PROP_TITLE, null)
 			setData(airing, PROP_SUBTITLE, null)
 			setData(airing, PROP_ENABLED, null)
-			setData(airing, PROP_STATUS, clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), new Date(AiringAPI.GetAiringStartTime(airing))))
+			synchronized(clnt) {
+				setData(airing, PROP_STATUS, clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), new Date(AiringAPI.GetAiringStartTime(airing))))
+			}
 			setData(airing, PROP_LAST_CHECK, System.currentTimeMillis())
 			return true
 		}
@@ -167,7 +186,10 @@ final class DataStore {
 	}
 
 	Status newOverride(def airing, String title, String subtitle, boolean isEnabled) {
-		def status = isEnabled ? clnt.getStatus(title, subtitle, new Date(AiringAPI.GetAiringStartTime(airing))) : null
+		def status
+		synchronized(clnt) {
+			status = isEnabled ? clnt.getStatus(title, subtitle, new Date(AiringAPI.GetAiringStartTime(airing))) : null
+		}
 		if(!isEnabled || !status.isError()) {
 			setData(airing, PROP_TITLE, title)
 			setData(airing, PROP_SUBTITLE, subtitle)

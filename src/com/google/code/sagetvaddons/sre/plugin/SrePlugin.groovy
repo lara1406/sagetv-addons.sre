@@ -15,15 +15,13 @@
 */
 package com.google.code.sagetvaddons.sre.plugin
 
-import javax.xml.bind.annotation.XmlElementDecl.GLOBAL;
-
 import org.apache.log4j.Logger
 import org.apache.log4j.PropertyConfigurator
 
 import sage.SageTVPluginRegistry
 import sagex.SageAPI
 import sagex.api.AiringAPI
-import sagex.api.Global;
+import sagex.api.Global
 import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
@@ -31,6 +29,7 @@ import sagex.plugin.SageEvent
 import com.google.code.sagetvaddons.sre.engine.MonitorThread
 import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
 import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
+import com.google.code.sagetvaddons.sre.tasks.DataStoreCleanupTask
 
 /**
  * @author dbattams
@@ -55,6 +54,7 @@ public final class SrePlugin extends AbstractPlugin {
 	static final String PROP_IGNORE_B2B = "${PROP_PREFIX}/ignoreB2B"
 	static final String PROP_GEN_SYSMSG = "${PROP_PREFIX}/genSysMsg"
 	
+	private Timer timer
 	private List monitors
 	
 	/**
@@ -63,6 +63,7 @@ public final class SrePlugin extends AbstractPlugin {
 	public SrePlugin(SageTVPluginRegistry registry) {
 		super(registry)
 		monitors = Collections.synchronizedList([])
+		timer = null
 	}
 	
 	@Override
@@ -92,6 +93,10 @@ public final class SrePlugin extends AbstractPlugin {
 		Global.GetCurrentlyRecordingMediaFiles().each {
 			createMonitor(null, [MediaFile:it])
 		}
+		if(timer)
+			timer.cancel()
+		timer = new Timer(true)
+		timer.schedule(new DataStoreCleanupTask(), 10000, 3600000)
 	}
 	
 	@Override
@@ -102,6 +107,10 @@ public final class SrePlugin extends AbstractPlugin {
 				stopThread(t)
 		}
 		monitors.clear()
+		if(timer) {
+			timer.cancel()
+			timer = null
+		}
 	}
 	
 	@SageEvent('RecordingStarted')
