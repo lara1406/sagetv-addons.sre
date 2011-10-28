@@ -105,7 +105,6 @@ class MonitorThread extends Thread {
 				LOG.debug "${logPreamble()}: Sleeping for ${POLL_FREQ / 1000} seconds."
 				Thread.sleep POLL_FREQ
 			} catch(InterruptedException e) {
-				LOG.debug "${logPreamble()}: Thread interrupted", e
 				LOG.warn "${logPreamble()}: Monitor halting because of interrupt signal."
 				break
 			}

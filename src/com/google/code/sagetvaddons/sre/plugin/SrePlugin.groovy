@@ -15,12 +15,15 @@
 */
 package com.google.code.sagetvaddons.sre.plugin
 
+import javax.xml.bind.annotation.XmlElementDecl.GLOBAL;
+
 import org.apache.log4j.Logger
 import org.apache.log4j.PropertyConfigurator
 
 import sage.SageTVPluginRegistry
 import sagex.SageAPI
 import sagex.api.AiringAPI
+import sagex.api.Global;
 import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
@@ -34,7 +37,7 @@ import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
  *
  */
 public final class SrePlugin extends AbstractPlugin {
-	static { PropertyConfigurator.configure(!SageAPI.isRemote() ? 'plugins/sre4/' : '' + 'sre4.log4j.properties') }
+	static { PropertyConfigurator.configure((!SageAPI.isRemote() ? 'plugins/sre4/' : '') + 'sre4.log4j.properties') }
 	static private final Logger LOG = Logger.getLogger(SrePlugin)
 	static private SrePlugin INSTANCE = null
 	static SrePlugin get() { return INSTANCE }
@@ -86,6 +89,19 @@ public final class SrePlugin extends AbstractPlugin {
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_GEN_SYSMSG, 'false', 'Generate System Messages', 'Should SRE generate system messages when overrides may be needed or other errors are detected with the plugin?')
 		addProperty(p)
 		INSTANCE = this
+		Global.GetCurrentlyRecordingMediaFiles().each {
+			createMonitor(null, [MediaFile:it])
+		}
+	}
+	
+	@Override
+	void stop() {
+		super.stop()
+		synchronized(monitors) {
+			for(MonitorThread t : monitors)
+				stopThread(t)
+		}
+		monitors.clear()
 	}
 	
 	@SageEvent('RecordingStarted')
@@ -100,13 +116,8 @@ public final class SrePlugin extends AbstractPlugin {
 	
 	@SageEvent('RecordingStopped')
 	void stopMonitor(String eventName, Map args) {
-		MonitorThread t = getMonitor(AiringAPI.GetAiringID(args['MediaFile']))
-		if(t) {
-			if(t.isAlive())
-				t.interrupt()
-			monitors.remove t
-			LOG.debug "Monitor stopped for ${args['MediaFile']}"
-		}
+		stopThread(getMonitor(AiringAPI.GetAiringID(args['MediaFile'])))
+		LOG.debug "Monitor stopped for ${args['MediaFile']}"
 	}
 	
 	void resetMonitor(def airing) {
@@ -121,5 +132,13 @@ public final class SrePlugin extends AbstractPlugin {
 				if(t.airingId == id) return t
 		}
 		return null
+	}
+	
+	private void stopThread(MonitorThread t) {
+		if(t) {
+			if(t.isAlive())
+				t.interrupt()
+			monitors.remove t
+		}
 	}
 }
