@@ -1,18 +1,18 @@
 /*
-*      Copyright 2011 Battams, Derek
-*
-*       Licensed under the Apache License, Version 2.0 (the "License");
-*       you may not use this file except in compliance with the License.
-*       You may obtain a copy of the License at
-*
-*          http://www.apache.org/licenses/LICENSE-2.0
-*
-*       Unless required by applicable law or agreed to in writing, software
-*       distributed under the License is distributed on an "AS IS" BASIS,
-*       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*       See the License for the specific language governing permissions and
-*       limitations under the License.
-*/
+ *      Copyright 2011 Battams, Derek
+ *
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *       Unless required by applicable law or agreed to in writing, software
+ *       distributed under the License is distributed on an "AS IS" BASIS,
+ *       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *       See the License for the specific language governing permissions and
+ *       limitations under the License.
+ */
 package com.google.code.sagetvaddons.sre.engine
 
 import org.apache.log4j.Logger
@@ -29,13 +29,14 @@ import com.livepvrdata.data.net.resp.StatusResponse
 
 class MonitorThread extends Thread {
 	static private final Logger LOG = Logger.getLogger(MonitorThread)
-	
+
 	static enum Status {
 		NO_MONITOR,
 		VALID,
 		UNKNOWN,
 		INVALID,
-		MONITORING
+		MONITORING,
+		COMPLETE
 	}
 
 	static private final int POLL_FREQ = 120000
@@ -59,7 +60,7 @@ class MonitorThread extends Thread {
 		isExtending = false
 		defaultPaddingApplied = false
 		wasMonitored = false
-		
+
 		setDaemon(true)
 		setName("SREv4-Monitor-$airingId")
 	}
@@ -71,46 +72,50 @@ class MonitorThread extends Thread {
 	@Override
 	void run() {
 		DataStore ds = DataStore.getInstance()
-		while(true) {
-			if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
-				LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
-				break
-			}
-			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
-				if(!isUnmonitored()) {
-					boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
-					if(!ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
-						setUnmonitored(true)
-						LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
-					} else {
-						try {
-							def data = getAiringDetails()
-							LOG.debug "${logPreamble()}: Fetching status with data: $data"
-							response = clnt.getStatus(data[0], data[1], new Date(data[2]))
-							if(response == null) {
-								setUnmonitored(true)
-								LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."
-							} else
-								wasMonitored = true
-							processResponse()	
-						} catch(IOException e) {
-							LOG.error "${logPreamble()}: IOError", e
-							handleErrorResponse()
+		if(ds.getMonitorStatus() != Status.COMPLETE) {
+			while(true) {
+				if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
+					LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
+					break
+				}
+				if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
+					if(!isUnmonitored()) {
+						boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
+						if(!ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
+							setUnmonitored(true)
+							LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
+						} else {
+							try {
+								def data = getAiringDetails()
+								LOG.debug "${logPreamble()}: Fetching status with data: $data"
+								response = clnt.getStatus(data[0], data[1], new Date(data[2]))
+								if(response == null) {
+									setUnmonitored(true)
+									LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."
+								} else
+									wasMonitored = true
+								processResponse()
+							} catch(IOException e) {
+								LOG.error "${logPreamble()}: IOError", e
+								handleErrorResponse()
+							}
 						}
 					}
+				} else {
+					LOG.info "${logPreamble()}: Monitor disabled because ignore back to back is enabled and the next airing is scheduled to record."
 				}
-			} else {
-				LOG.info "${logPreamble()}: Monitor disabled because ignore back to back is enabled and the next airing is scheduled to record."
+				try {
+					LOG.debug "${logPreamble()}: Sleeping for ${POLL_FREQ / 1000} seconds."
+					Thread.sleep POLL_FREQ
+				} catch(InterruptedException e) {
+					LOG.warn "${logPreamble()}: Monitor halting because of interrupt signal."
+					break
+				}
 			}
-			try {
-				LOG.debug "${logPreamble()}: Sleeping for ${POLL_FREQ / 1000} seconds."
-				Thread.sleep POLL_FREQ
-			} catch(InterruptedException e) {
-				LOG.warn "${logPreamble()}: Monitor halting because of interrupt signal."
-				break
-			}
-		}
-		rmManualRecFlag()
+			rmManualRecFlag()
+			ds.setMonitorStatus(mediaFile, Status.COMPLETE)
+		} else
+			LOG.warn "${logPreamble()}: Terminating monitor because this airing has already had a completed monitor!"
 	}
 
 	private void rmManualRecFlag() {
@@ -178,7 +183,7 @@ class MonitorThread extends Thread {
 	}
 
 	private long getPostGamePadding() {
-		return 60000L * Configuration.GetServerProperty(SrePlugin.PROP_DEFAULT_PAD, '0').toLong()
+		return 60000L * Configuration.GetServerProperty(SrePlugin.PROP_POST_PAD, '0').toLong()
 	}
 
 	private void extendRecording() {
@@ -213,7 +218,7 @@ class MonitorThread extends Thread {
 		}
 		defaultPaddingApplied = true
 	}
-	
+
 	private String logPreamble() {
 		return "${airingId}/${AiringAPI.GetAiringTitle(mediaFile)}"
 	}
