@@ -108,7 +108,7 @@ public final class SrePlugin extends AbstractPlugin {
 							itr.remove()
 					}
 				}
-				LOG.debug "Dead monitor threads have been cleaned."
+				LOG.debug 'Dead monitor threads have been cleaned.'
 			}
 		}, 120000, 3600000)
 	}

@@ -173,7 +173,7 @@ class MonitorThread extends Thread {
 			LOG.info "${logPreamble()}: Event is over, applying post game padding from now."
 		}
 		AiringAPI.SetRecordingTimes(mediaFile, AiringAPI.GetScheduleStartTime(mediaFile), end)
-		LOG.info "${logPreamble}: Recording scheduled to end at ${new Date(end)} [${postPad / 60000L} mins post padding applied]"
+		LOG.info "${logPreamble()}: Recording scheduled to end at ${new Date(end)} [${postPad / 60000L} mins post padding applied]"
 		setUnmonitored(true)
 	}
 
