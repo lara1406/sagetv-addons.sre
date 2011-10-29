@@ -58,7 +58,9 @@ final class DataStore {
 	}
 
 	private void setData(def airing, String name, def value) {
-		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, AiringAPI.GetAiringID(airing).toString()), name, value.toString())
+		def id = AiringAPI.GetAiringID(airing).toString()
+		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, id), name, value.toString())
+		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, id), PROP_ID, id)
 	}
 
 	void clean() {
@@ -194,7 +196,6 @@ final class DataStore {
 			setData(airing, PROP_TITLE, title)
 			setData(airing, PROP_SUBTITLE, subtitle)
 			setData(airing, PROP_ENABLED, isEnabled)
-			setData(airing, PROP_ID, AiringAPI.GetAiringID(airing))
 			setData(airing, PROP_STATUS, status ? Status.VALID : Status.NO_MONITOR)
 			setData(airing, PROP_LAST_CHECK, System.currentTimeMillis())
 			SrePlugin.get().resetMonitor(airing)
