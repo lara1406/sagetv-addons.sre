@@ -72,7 +72,7 @@ class MonitorThread extends Thread {
 	@Override
 	void run() {
 		DataStore ds = DataStore.getInstance()
-		if(ds.getMonitorStatus() != Status.COMPLETE) {
+		if(ds.getMonitorStatus(mediaFile) != Status.COMPLETE) {
 			while(true) {
 				if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
 					LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
