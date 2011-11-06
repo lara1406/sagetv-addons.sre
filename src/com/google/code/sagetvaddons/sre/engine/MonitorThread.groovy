@@ -30,15 +30,6 @@ import com.livepvrdata.data.net.resp.StatusResponse
 class MonitorThread extends Thread {
 	static private final Logger LOG = Logger.getLogger(MonitorThread)
 
-	static enum Status {
-		NO_MONITOR,
-		VALID,
-		UNKNOWN,
-		INVALID,
-		MONITORING,
-		COMPLETE
-	}
-
 	static private final int POLL_FREQ = 120000
 
 	final int airingId
@@ -113,7 +104,7 @@ class MonitorThread extends Thread {
 				}
 			}
 			rmManualRecFlag()
-			ds.setMonitorStatus(mediaFile, Status.COMPLETE)
+			ds.setMonitorStatus(mediaFile, MonitorStatus.COMPLETE)
 		} else
 			LOG.warn "${logPreamble()}: Terminating monitor because this airing has already had a completed monitor!"
 	}
@@ -155,7 +146,7 @@ class MonitorThread extends Thread {
 
 	private void processResponse() {
 		if(response == null) return
-		DataStore.getInstance().setMonitorStatus(mediaFile, Status.MONITORING)
+		DataStore.getInstance().setMonitorStatus(mediaFile, MonitorStatus.MONITORING)
 		if(!response.isError()) {
 			def resp = (StatusResponse)response
 			if(!resp.isComplete()) {
@@ -204,7 +195,7 @@ class MonitorThread extends Thread {
 		if(isExtending) {
 			AiringAPI.SetRecordingTimes(mediaFile, AiringAPI.GetScheduleStartTime(mediaFile), AiringAPI.GetScheduleEndTime(mediaFile) + POLL_FREQ)
 			LOG.warn "${logPreamble()}: Error from web service; auto extended recording."
-		} else if(!defaultPaddingApplied && DataStore.getInstance().getMonitorStatus(mediaFile) != Status.NO_MONITOR) {
+		} else if(!defaultPaddingApplied && DataStore.getInstance().getMonitorStatus(mediaFile) != MonitorStatus.NO_MONITOR) {
 			applyDefaultPadding()
 			LOG.warn "${logPreamble()}: Error from web service; applied default padding."
 		} else

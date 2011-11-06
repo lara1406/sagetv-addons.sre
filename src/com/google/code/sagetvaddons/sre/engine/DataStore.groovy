@@ -22,13 +22,10 @@ import sagex.api.MediaFileAPI
 import sagex.api.ShowAPI
 import sagex.api.UserRecordAPI
 
-import com.google.code.livepvrdata4j.Client
-import com.google.code.sagetvaddons.sre.engine.MonitorThread.Status
-import com.google.code.sagetvaddons.sre.plugin.SrePlugin
-
 final class DataStore {
 	static private final Logger LOG = Logger.getLogger(DataStore)
 	
+	static final String STORE_ID = 'sre4'
 	static final String PROP_STATUS = 'status'
 	static final String PROP_TITLE = 'title'
 	static final String PROP_SUBTITLE = 'subtitle'
@@ -42,14 +39,10 @@ final class DataStore {
 		return INSTANCE
 	}
 
-	private Client clnt
-
-	private DataStore() {
-		clnt = new Client()
-	}
+	private DataStore() {}
 
 	private def get(def airing) {
-		return UserRecordAPI.GetUserRecord(SrePlugin.PLUGIN_ID, AiringAPI.GetAiringID(airing).toString())
+		return UserRecordAPI.GetUserRecord(STORE_ID, AiringAPI.GetAiringID(airing).toString())
 	}
 
 	private String getData(def airing, String name) {
@@ -59,12 +52,12 @@ final class DataStore {
 
 	private void setData(def airing, String name, def value) {
 		def id = AiringAPI.GetAiringID(airing).toString()
-		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, id), name, value.toString())
-		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(SrePlugin.PLUGIN_ID, id), PROP_ID, id)
+		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(STORE_ID, id), name, value.toString())
+		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(STORE_ID, id), PROP_ID, id)
 	}
 
 	void clean() {
-		UserRecordAPI.GetAllUserRecords(SrePlugin.PLUGIN_ID).each { r ->
+		UserRecordAPI.GetAllUserRecords(STORE_ID).each { r ->
 			def id = UserRecordAPI.GetUserRecordData(r, PROP_ID).toInteger()
 			def air = AiringAPI.GetAiringForID(id)
 			if(!air || (AiringAPI.GetScheduleStartTime(air) < System.currentTimeMillis() && !MediaFileAPI.IsFileCurrentlyRecording(AiringAPI.GetMediaFileForAiring(air)))) {
@@ -95,18 +88,16 @@ final class DataStore {
 			setData(airing, PROP_TITLE, null)
 			setData(airing, PROP_SUBTITLE, null)
 			setData(airing, PROP_ENABLED, null)
-			synchronized(clnt) {
-				setData(airing, PROP_STATUS, clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), new Date(AiringAPI.GetAiringStartTime(airing))))
-			}
-			setData(airing, PROP_LAST_CHECK, System.currentTimeMillis())
+			setData(airing, PROP_STATUS, MonitorStatus.UNKNOWN)
+			setData(airing, PROP_LAST_CHECK, 0)
 			return true
 		}
 		return false
 	}
 
-	Status getMonitorStatus(def airing) {
+	MonitorStatus getMonitorStatus(def airing) {
 		def status = getData(airing, PROP_STATUS)
-		return status ? Status.valueOf(status) : Status.UNKNOWN
+		return status ? MonitorStatus.valueOf(status) : MonitorStatus.UNKNOWN
 	}
 
 	/**
@@ -115,11 +106,11 @@ final class DataStore {
 	 * @return
 	 * @deprecated Use version that accepts an airing object instead
 	 */
-	Status getMonitorStatus(int id) {
+	MonitorStatus getMonitorStatus(int id) {
 		return getMonitorStatus(AiringAPI.GetAiringForID(id))
 	}
 
-	void setMonitorStatus(def airing, Status status) {
+	void setMonitorStatus(def airing, MonitorStatus status) {
 		setData(airing, PROP_STATUS, status)
 	}
 	
@@ -153,7 +144,7 @@ final class DataStore {
 
 	AiringOverride[] getOverrides() {
 		def overrides = []
-		UserRecordAPI.GetAllUserRecords(SrePlugin.PLUGIN_ID).each {
+		UserRecordAPI.GetAllUserRecords(STORE_ID).each {
 			def override = getOverrideForUserRecord(it)
 			if(override)
 				overrides.add(override)
@@ -183,23 +174,16 @@ final class DataStore {
 		return getData(airing, PROP_STATUS)?.length() > 0
 	}
 
-	Status newOverride(int id, String title, String subtitle, boolean isEnabled) {
+	MonitorStatus newOverride(int id, String title, String subtitle, boolean isEnabled) {
 		return newOverride(AiringAPI.GetAiringForID(id), title, subtitle, isEnabled)
 	}
 
-	Status newOverride(def airing, String title, String subtitle, boolean isEnabled) {
-		def status
-		synchronized(clnt) {
-			status = isEnabled ? clnt.getStatus(title, subtitle, new Date(AiringAPI.GetAiringStartTime(airing))) : null
-		}
-		if(!isEnabled || !status.isError()) {
-			setData(airing, PROP_TITLE, title)
-			setData(airing, PROP_SUBTITLE, subtitle)
-			setData(airing, PROP_ENABLED, isEnabled)
-			setData(airing, PROP_STATUS, status ? Status.VALID : Status.NO_MONITOR)
-			setData(airing, PROP_LAST_CHECK, System.currentTimeMillis())
-			SrePlugin.get().resetMonitor(airing)
-		}
+	MonitorStatus newOverride(def airing, String title, String subtitle, boolean isEnabled) {
+		setData(airing, PROP_TITLE, title)
+		setData(airing, PROP_SUBTITLE, subtitle)
+		setData(airing, PROP_ENABLED, isEnabled)
+		setData(airing, PROP_STATUS, MonitorStatus.UNKNOWN)
+		setData(airing, PROP_LAST_CHECK, 0)
 	}
 
 	/**

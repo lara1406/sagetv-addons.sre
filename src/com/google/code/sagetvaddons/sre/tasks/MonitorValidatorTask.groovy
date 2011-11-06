@@ -25,7 +25,7 @@ import sagex.api.ShowAPI
 
 import com.google.code.livepvrdata4j.Client
 import com.google.code.sagetvaddons.sre.engine.DataStore
-import com.google.code.sagetvaddons.sre.engine.MonitorThread.Status
+import com.google.code.sagetvaddons.sre.engine.MonitorStatus
 
 class MonitorValidatorTask extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(MonitorValidatorTask)
@@ -46,16 +46,16 @@ class MonitorValidatorTask extends TimerTask {
 				try {
 					def resp = clnt.getStatus(override[0], override[1], new Date(override[2]))
 					if(resp == null)
-						status = Status.NO_MONITOR
+						status = MonitorStatus.NO_MONITOR
 					else if(resp.isError())
-						status = Status.INVALID
+						status = MonitorStatus.INVALID
 					else
-						status = Status.VALID
+						status = MonitorStatus.VALID
 				} catch(IOException e) {
-					status = Status.UNKNOWN
+					status = MonitorStatus.UNKNOWN
 				}
 				def oldStatus = ds.getMonitorStatus(it)
-				if(status != Status.UNKNOWN)
+				if(status != MonitorStatus.UNKNOWN)
 					ds.setMonitorStatus it, status
 			} else if(LOG.isDebugEnabled())
 				LOG.debug "Skipped status check of ${AiringAPI.GetAiringID(it)}"

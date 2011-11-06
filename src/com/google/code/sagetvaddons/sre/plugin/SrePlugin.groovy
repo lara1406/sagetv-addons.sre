@@ -26,6 +26,7 @@ import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
 
+import com.google.code.sagetvaddons.sre.engine.DataStore
 import com.google.code.sagetvaddons.sre.engine.MonitorThread
 import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
 import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
@@ -43,7 +44,7 @@ public final class SrePlugin extends AbstractPlugin {
 	static private SrePlugin INSTANCE = null
 	static SrePlugin get() { return INSTANCE }
 	
-	static final String PLUGIN_ID = 'sre4'
+	static final String PLUGIN_ID = DataStore.STORE_ID
 	static private final String PROP_PREFIX = PLUGIN_ID
 	static final String PROP_EMAIL = "${PROP_PREFIX}/email"
 	static final String PROP_ENABLE = "${PROP_PREFIX}/enable"
