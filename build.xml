@@ -75,10 +75,16 @@
   	  	<include name="*.log4j.properties" />
   	  </fileset>
   	</copy> 
-  	<jar destfile="sre.jar" basedir="bld" />
+  	<jar destfile="sre.jar" basedir="bld" includes="**/*.class" excludes="**/engine/*.class" />
   	<zip destfile="sre-jar-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sre.jar" />
   	<checksum file="sre-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
   	<replace file="sagetv.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
+  	
+  	<jar destfile="sre-common.jar" basedir="bld" includes="**/engine/*.class" />
+  	<zip destfile="sre-common-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sre-common.jar" />
+  	<checksum file="sre-common-${app.ver}.${revision.max-with-flags}.zip" property="common.jar.md5" />
+  	<replace file="common.plugin.xml" token="@@JAR_MD5@@" value="${common.jar.md5}" /> 	
+  	
   	<zip destfile="sre-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="plugin" />
   	<checksum file="sre-conf-${app.ver}.${revision.max-with-flags}.zip" property="bin.conf.md5" />
   	<replace file="sagetv.plugin.xml" token="@@CONF_MD5@@" value="${bin.conf.md5}" />
@@ -92,10 +98,13 @@
 	<fail message="gc.password must be defined in ${gc.upload.settings}" unless="gc.password" />
 	<taskdef classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask" name="gcupload" />
 	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sre-jar-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sre-jar-${app.ver}.${revision.max-with-flags}.zip" summary="SREv4 plugin snapshot build (plugin JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sre-common-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sre-common-${app.ver}.${revision.max-with-flags}.zip" summary="SREv4 plugin snapshot build (common JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sre-conf-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sre-conf-${app.ver}.${revision.max-with-flags}.zip" summary="SREv4 plugin snapshot build (config)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
   </target>
 
   <target name="submit" depends="deliver" description="Submit plugin to SageTV repository">
 	<taskdef classname="com.google.code.sagetvaddons.dev.ant.task.SageTvPluginSubmitter" name="sagesubmit" />
+  	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sre" reqtype="UPGRADE" descriptor="common.plugin.xml" />
   	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sre" reqtype="UPGRADE" descriptor="sagetv.plugin.xml" />
   </target>
 
@@ -103,7 +112,7 @@
   	<delete dir="plugin" failonerror="false" />
   	<delete dir="bld" failonerror="false" />
   	<delete>
-  	  <fileset dir="." includes="sre-*.zip,sre.jar" />
+  	  <fileset dir="." includes="sre-*.zip,sre*.jar" />
     </delete>
   </target>
 
