@@ -58,12 +58,15 @@ class MonitorThread extends Thread {
 
 	synchronized boolean isUnmonitored() { return unmonitored }
 
-	synchronized void setUnmonitored(boolean b) { unmonitored = b }
+	synchronized void setUnmonitored(boolean b) {
+		unmonitored = b
+		MediaFileAPI.SetMediaFileMetadata(mediaFile, DataStore.PROP_MEDIAFILE_MONITORED, Boolean.toString(wasMonitored))
+	}
 
 	@Override
 	void run() {
 		DataStore ds = DataStore.getInstance()
-		if(ds.getMonitorStatus(mediaFile) != Status.COMPLETE) {
+		if(ds.getMonitorStatus(mediaFile) != MonitorStatus.COMPLETE) {
 			while(true) {
 				if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
 					LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
@@ -81,10 +84,13 @@ class MonitorThread extends Thread {
 								LOG.debug "${logPreamble()}: Fetching status with data: $data"
 								response = clnt.getStatus(data[0], data[1], new Date(data[2]))
 								if(response == null) {
+									wasMonitored = false
 									setUnmonitored(true)
 									LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."
-								} else
+								} else {
 									wasMonitored = true
+									setUnmonitored(false)
+								}
 								processResponse()
 							} catch(IOException e) {
 								LOG.error "${logPreamble()}: IOError", e

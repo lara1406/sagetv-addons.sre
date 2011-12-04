@@ -32,6 +32,7 @@ final class DataStore {
 	static final String PROP_ENABLED = 'enabled'
 	static final String PROP_ID = 'id'
 	static final String PROP_LAST_CHECK = 'lastCheck'
+	static final String PROP_MEDIAFILE_MONITORED = 'SREv4_Monitored'
 
 	static private final DataStore INSTANCE = new DataStore()
 
@@ -56,6 +57,11 @@ final class DataStore {
 		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(STORE_ID, id), PROP_ID, id)
 	}
 
+	// NOTE: Arg can be a MediaFile OR an Airing
+	boolean wasMonitored(def mediaFile) {
+		return mediaFile != null ? Boolean.parseBoolean(MediaFileAPI.GetMediaFileMetadata(mediaFile, PROP_MEDIAFILE_MONITORED)) : false
+	}
+	
 	void clean() {
 		UserRecordAPI.GetAllUserRecords(STORE_ID).each { r ->
 			def id = UserRecordAPI.GetUserRecordData(r, PROP_ID).toInteger()
