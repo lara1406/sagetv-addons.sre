@@ -22,4 +22,21 @@ enum MonitorStatus {
 	INVALID,
 	MONITORING,
 	COMPLETE
+	
+	static public String getToolTip(String status) {
+		if(NO_MONITOR.toString().equals(status))
+			return 'Recording not monitored.'
+		else if(VALID.toString().equals(status))
+			return 'Recording will be monitored.'
+		else if(UNKNOWN.toString().equals(status))
+			return 'Monitor status unknown.'
+		else if(INVALID.toString().equals(status))
+			return 'Monitor status is invalid.'
+		else if(MONITORING.toString().equals(status))
+			return 'This recording is currently being monitored.'
+		else if(COMPLETE.toString().equals(status))
+			return 'The monitor for this recording has completed.'
+		else
+			return "Unrecognized status!";
+	}
 }
