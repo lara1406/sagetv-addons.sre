@@ -35,7 +35,10 @@ class MonitorValidatorTask extends TimerTask {
 		def now = System.currentTimeMillis()
 		def ds = DataStore.getInstance()
 		Global.GetScheduledRecordings().each {
-			def lastCheck = ds.getData(it, DataStore.PROP_LAST_CHECK)?.toLong()
+			def lastCheck = ds.getData(it, DataStore.PROP_LAST_CHECK)
+			if(lastCheck == null || lastCheck == '')
+				lastCheck = '0'
+			lastCheck = lastCheck.toLong()
 			if(!lastCheck || ((now - lastCheck) >= 86400000L && AiringAPI.GetScheduleStartTime(it) > now)) {
 				LOG.debug "Checking status of ${AiringAPI.GetAiringID(it)}"
 				def status

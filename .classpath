@@ -4,7 +4,6 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
-	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
 	<classpathentry kind="var" path="SAGE_JAR"/>
 	<classpathentry kind="var" path="SAGELIB/log4j-1.2.15.jar"/>
 	<classpathentry kind="var" path="SAGELIB/livepvrdata4j.jar"/>
@@ -14,5 +13,6 @@
 	<classpathentry kind="var" path="SAGELIB/gson-1.6.jar"/>
 	<classpathentry kind="var" path="SAGELIB/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="var" path="SAGELIB/json.jar"/>
+	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
