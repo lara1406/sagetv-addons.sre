@@ -43,7 +43,7 @@ class MonitorValidatorTask extends TimerTask {
 				LOG.debug "Checking status of ${AiringAPI.GetAiringID(it)}"
 				def status
 				def clnt = new Client()
-				def override = ds.getOverride(it)
+				def override = ds.getOverrideByObj(it)
 				if(!override)
 					override = [AiringAPI.GetAiringTitle(it), ShowAPI.GetShowEpisode(it), AiringAPI.GetAiringStartTime(it)]
 				try {
@@ -57,7 +57,7 @@ class MonitorValidatorTask extends TimerTask {
 				} catch(IOException e) {
 					status = MonitorStatus.UNKNOWN
 				}
-				def oldStatus = ds.getMonitorStatus(it)
+				def oldStatus = ds.getMonitorStatusByObj(it)
 				if(status != MonitorStatus.UNKNOWN)
 					ds.setMonitorStatus it, status
 			} else if(LOG.isDebugEnabled())
