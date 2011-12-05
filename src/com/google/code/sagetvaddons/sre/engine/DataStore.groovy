@@ -82,13 +82,13 @@ final class DataStore {
 	/**
 	 * @param id
 	 * @return
-	 * @deprecated For backwards compatibility only; use the version that accepts an airing object instead
+	 * @deprecated For backwards compatibility only; use deleteOverrideByObj() instead
 	 */
 	boolean deleteOverride(int id) {
-		return deleteOverride(AiringAPI.GetAiringForID(id))
+		return deleteOverrideByObj(AiringAPI.GetAiringForID(id))
 	}
 
-	boolean deleteOverride(def airing) {
+	boolean deleteOverrideByObj(def airing) {
 		def record = get(airing)
 		if(record) {
 			setData(airing, PROP_TITLE, null)
@@ -101,7 +101,8 @@ final class DataStore {
 		return false
 	}
 
-	MonitorStatus getMonitorStatus(def airing) {
+	MonitorStatus getMonitorStatusByObj(def airing) {
+		LOG.info "Calling getMonitorStatus() $airing"
 		def status = getData(airing, PROP_STATUS)
 		return status ? MonitorStatus.valueOf(status) : MonitorStatus.UNKNOWN
 	}
@@ -110,10 +111,11 @@ final class DataStore {
 	 * 
 	 * @param id
 	 * @return
-	 * @deprecated Use version that accepts an airing object instead
+	 * @deprecated Use getMonitorStatusByObj() instead
 	 */
 	MonitorStatus getMonitorStatus(int id) {
-		return getMonitorStatus(AiringAPI.GetAiringForID(id))
+		LOG.info "Calling getMonitorStatus(int: $id)"
+		return getMonitorStatusByObj(AiringAPI.GetAiringForID(id))
 	}
 
 	void setMonitorStatus(def airing, MonitorStatus status) {
@@ -127,10 +129,10 @@ final class DataStore {
 	 * @deprecated Use version that accepts an airing object instead
 	 */
 	AiringOverride getOverride(int id) {
-		return getOverride(AiringAPI.GetAiringForID(id))
+		return getOverrideByObj(AiringAPI.GetAiringForID(id))
 	}
 
-	AiringOverride getOverride(def airing) {
+	AiringOverride getOverrideByObj(def airing) {
 		def title = getData(airing, PROP_TITLE)
 		def subtitle = getData(airing, PROP_SUBTITLE)
 		def enabled = getData(airing, PROP_ENABLED)
@@ -173,18 +175,18 @@ final class DataStore {
 	boolean isValid() { return true }
 
 	boolean monitorStatusExists(int id) {
-		return monitorStatusExists(AiringAPI.GetAiringForID(id))
+		return monitorStatusExistsForObj(AiringAPI.GetAiringForID(id))
 	}
 
-	boolean monitorStatusExists(def airing) {
+	boolean monitorStatusExistsForObj(def airing) {
 		return getData(airing, PROP_STATUS)?.length() > 0
 	}
 
 	MonitorStatus newOverride(int id, String title, String subtitle, boolean isEnabled) {
-		return newOverride(AiringAPI.GetAiringForID(id), title, subtitle, isEnabled)
+		return newOverrideForObj(AiringAPI.GetAiringForID(id), title, subtitle, isEnabled)
 	}
 
-	MonitorStatus newOverride(def airing, String title, String subtitle, boolean isEnabled) {
+	MonitorStatus newOverrideForObj(def airing, String title, String subtitle, boolean isEnabled) {
 		setData(airing, PROP_TITLE, title)
 		setData(airing, PROP_SUBTITLE, subtitle)
 		setData(airing, PROP_ENABLED, isEnabled)
