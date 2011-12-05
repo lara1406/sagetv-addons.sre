@@ -57,9 +57,9 @@ class MonitorValidatorTask extends TimerTask {
 				} catch(IOException e) {
 					status = MonitorStatus.UNKNOWN
 				}
-				def oldStatus = ds.getMonitorStatusByObj(it)
 				if(status != MonitorStatus.UNKNOWN)
 					ds.setMonitorStatus it, status
+				ds.setData it, DataStore.PROP_LAST_CHECK, System.currentTimeMillis().toString()
 			} else if(LOG.isDebugEnabled())
 				LOG.debug "Skipped status check of ${AiringAPI.GetAiringID(it)}"
 		}

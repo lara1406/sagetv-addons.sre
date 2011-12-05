@@ -102,7 +102,6 @@ final class DataStore {
 	}
 
 	MonitorStatus getMonitorStatusByObj(def airing) {
-		LOG.info "Calling getMonitorStatus() $airing"
 		def status = getData(airing, PROP_STATUS)
 		return status ? MonitorStatus.valueOf(status) : MonitorStatus.UNKNOWN
 	}
@@ -114,7 +113,6 @@ final class DataStore {
 	 * @deprecated Use getMonitorStatusByObj() instead
 	 */
 	MonitorStatus getMonitorStatus(int id) {
-		LOG.info "Calling getMonitorStatus(int: $id)"
 		return getMonitorStatusByObj(AiringAPI.GetAiringForID(id))
 	}
 
