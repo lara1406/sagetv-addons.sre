@@ -56,7 +56,7 @@ final class DataStore {
 
 	private void setData(def airing, String name, def value) {
 		def id = AiringAPI.GetAiringID(airing).toString()
-		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(STORE_ID, id), name, value.toString())
+		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(STORE_ID, id), name, value != null ? value.toString() : null)
 		UserRecordAPI.SetUserRecordData(UserRecordAPI.AddUserRecord(STORE_ID, id), PROP_ID, id)
 	}
 
