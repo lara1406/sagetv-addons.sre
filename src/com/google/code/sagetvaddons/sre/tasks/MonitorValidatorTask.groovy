@@ -23,7 +23,7 @@ import sagex.api.AiringAPI
 import sagex.api.Global
 import sagex.api.ShowAPI
 
-import com.google.code.livepvrdata4j.Client
+import com.google.code.sagetvaddons.sre.engine.ClientFactory
 import com.google.code.sagetvaddons.sre.engine.DataStore
 import com.google.code.sagetvaddons.sre.engine.MonitorStatus
 
@@ -42,7 +42,7 @@ class MonitorValidatorTask extends TimerTask {
 			if(!lastCheck || ((now - lastCheck) >= 86400000L && AiringAPI.GetScheduleStartTime(it) > now)) {
 				LOG.debug "Checking status of ${AiringAPI.GetAiringID(it)}"
 				def status
-				def clnt = new Client()
+				def clnt = ClientFactory.get()
 				def override = ds.getOverrideByObj(it)
 				if(!override)
 					override = [AiringAPI.GetAiringTitle(it), ShowAPI.GetShowEpisode(it), AiringAPI.GetAiringStartTime(it)]

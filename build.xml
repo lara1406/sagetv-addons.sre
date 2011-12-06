@@ -54,7 +54,7 @@
   	    <filter token="BLD_NUM" value="${revision.max-with-flags}"/>
   	  	<filter token="MOD_DATE" value="${app.bld.date}"/>
   	  </filterset>
-    </copy> 
+    </copy>
   </target>
 	
   <target name="javac" depends="gensrc" description="Compile java source">
@@ -80,7 +80,12 @@
   	<checksum file="sre-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
   	<replace file="sagetv.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
   	
-  	<jar destfile="sre-common.jar" basedir="bld" includes="**/engine/*.class" />
+	<jar jarfile="sre-common.jar" basedir="bld" includes="**/engine/*.class">
+		<manifest>
+			<attribute name="SRE-Version" value="${app.ver}.${revision.max-with-flags}" />
+			<attribute name="SRE-SVN-Path" value="${repository.path}" />
+		</manifest>
+	</jar>
   	<zip destfile="sre-common-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sre-common.jar" />
   	<checksum file="sre-common-${app.ver}.${revision.max-with-flags}.zip" property="common.jar.md5" />
   	<replace file="common.plugin.xml" token="@@JAR_MD5@@" value="${common.jar.md5}" /> 	

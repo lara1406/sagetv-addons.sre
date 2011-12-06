@@ -22,6 +22,8 @@ import sagex.api.MediaFileAPI
 import sagex.api.ShowAPI
 import sagex.api.UserRecordAPI
 
+import com.google.code.livepvrdata4j.Client
+
 final class DataStore {
 	static private final Logger LOG = Logger.getLogger(DataStore)
 	
@@ -185,11 +187,18 @@ final class DataStore {
 	}
 
 	MonitorStatus newOverrideForObj(def airing, String title, String subtitle, boolean isEnabled) {
+		def status = null
+		if(isEnabled) {
+			Client clnt = ClientFactory.get()
+			status = clnt.getStatus(title, subtitle, new Date(AiringAPI.GetAiringStartTime(airing)))
+			if(status == null) return MonitorStatus.INVALID
+		}
+		if(status == null) status = MonitorStatus.NO_MONITOR
 		setData(airing, PROP_TITLE, title)
 		setData(airing, PROP_SUBTITLE, subtitle)
 		setData(airing, PROP_ENABLED, isEnabled)
-		setData(airing, PROP_STATUS, MonitorStatus.UNKNOWN)
-		setData(airing, PROP_LAST_CHECK, 0)
+		setData(airing, PROP_STATUS, status)
+		setData(airing, PROP_LAST_CHECK, System.currentTimeMillis())
 	}
 
 	/**

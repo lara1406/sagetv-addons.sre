@@ -46,7 +46,7 @@ class MonitorThread extends Thread {
 		this.mediaFile = mediaFile
 		airingId = AiringAPI.GetAiringID(this.mediaFile)
 		unmonitored = false
-		clnt = new Client()
+		clnt = ClientFactory.get()
 		response = null
 		isExtending = false
 		defaultPaddingApplied = false
