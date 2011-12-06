@@ -100,8 +100,8 @@ public final class SrePlugin extends AbstractPlugin {
 			timer.cancel()
 		timer = new Timer(true)
 		timer.schedule(new DataStoreCleanupTask(), 10000, 3600000)
-		timer.schedule(new MonitorValidatorTask(), 30000, 1200000)
 		timer.schedule(new MonitorCleanupTask(), 120000, 3600000)
+		new Thread(new MonitorValidatorTask()).start()
 	}
 	
 	@Override
@@ -116,6 +116,11 @@ public final class SrePlugin extends AbstractPlugin {
 			timer.cancel()
 			timer = null
 		}
+	}
+	
+	@SageEvent('RecordingScheduleChanged')
+	void validateMonitors(String eventName, Map args) {
+		new Thread(new MonitorValidatorTask()).start()
 	}
 	
 	@SageEvent('RecordingStarted')
