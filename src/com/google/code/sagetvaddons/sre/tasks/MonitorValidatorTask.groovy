@@ -26,6 +26,7 @@ import sagex.api.ShowAPI
 import com.google.code.sagetvaddons.sre.engine.ClientFactory
 import com.google.code.sagetvaddons.sre.engine.DataStore
 import com.google.code.sagetvaddons.sre.engine.MonitorStatus
+import com.google.code.sagetvaddons.sre.engine.AiringOverride
 
 class MonitorValidatorTask extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(MonitorValidatorTask)
@@ -45,9 +46,9 @@ class MonitorValidatorTask extends TimerTask {
 				def clnt = ClientFactory.get()
 				def override = ds.getOverrideByObj(it)
 				if(!override)
-					override = [AiringAPI.GetAiringTitle(it), ShowAPI.GetShowEpisode(it), AiringAPI.GetAiringStartTime(it)]
+					override = new AiringOverride(id: AiringAPI.GetAiringID(it), title: AiringAPI.GetAiringTitle(it), subtitle: ShowAPI.GetShowEpisode(it), enabled: true)
 				try {
-					def resp = clnt.getStatus(override[0], override[1], new Date(override[2]))
+					def resp = clnt.getStatus(override.title, override.subtitle, new Date(AiringAPI.GetAiringStartTime(it)))
 					if(resp == null)
 						status = MonitorStatus.NO_MONITOR
 					else if(resp.isError())
