@@ -96,7 +96,7 @@ final class DataStore {
 		if(record) {
 			def clnt = ClientFactory.get()
 			def state
-			def status = clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), AiringAPI.GetAiringStartTime(airing))
+			def status = clnt.getStatus(AiringAPI.GetAiringTitle(airing), ShowAPI.GetShowEpisode(airing), new Date(AiringAPI.GetAiringStartTime(airing)))
 			if(status == null)
 				state = MonitorStatus.NO_MONITOR
 			else if(status.isError())
