@@ -33,6 +33,10 @@ class MonitorValidatorTask extends TimerTask {
 	
 	@Override
 	public void run() {
+		if(Global.IsClient()) {
+			LOG.warn 'Halting validator task: Tasks refuse to run on SageClients'
+			return
+		}
 		def now = System.currentTimeMillis()
 		def ds = DataStore.getInstance()
 		Global.GetScheduledRecordings().each {

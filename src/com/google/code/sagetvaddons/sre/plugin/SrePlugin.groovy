@@ -20,25 +20,20 @@ import org.apache.log4j.PropertyConfigurator
 
 import sage.SageTVPluginRegistry
 import sagex.SageAPI
-import sagex.api.AiringAPI
 import sagex.api.Global
 import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
 
 import com.google.code.sagetvaddons.sre.engine.DataStore
-import com.google.code.sagetvaddons.sre.engine.MonitorThread
 import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
 import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
-import com.google.code.sagetvaddons.sre.tasks.DataStoreCleanupTask
-import com.google.code.sagetvaddons.sre.tasks.MonitorCleanupTask
-import com.google.code.sagetvaddons.sre.tasks.MonitorValidatorTask
 
 /**
  * @author dbattams
  *
  */
-public final class SrePlugin extends AbstractPlugin {
+class SrePlugin extends AbstractPlugin {
 	static { PropertyConfigurator.configure((!SageAPI.isRemote() ? 'plugins/sre4/' : '') + 'sre4.log4j.properties') }
 	static private final Logger LOG = Logger.getLogger(SrePlugin)
 	static private SrePlugin INSTANCE = null
@@ -57,21 +52,20 @@ public final class SrePlugin extends AbstractPlugin {
 	static final String PROP_IGNORE_B2B = "${PROP_PREFIX}/ignoreB2B"
 	static final String PROP_GEN_SYSMSG = "${PROP_PREFIX}/genSysMsg"
 	
-	private Timer timer
-	private List monitors
+	private IPlugin plugin
 	
 	/**
 	 * @param registry
 	 */
 	public SrePlugin(SageTVPluginRegistry registry) {
 		super(registry)
-		monitors = Collections.synchronizedList([])
-		timer = null
+		plugin = !Global.IsClient() ? new ServerPlugin() : new ClientPlugin()
 	}
 	
 	@Override
 	void start() {
 		super.start()
+		INSTANCE = this
 		PluginProperty p = new ServerStoredProperty(CONFIG_TEXT, PROP_EMAIL, '', 'Email Address', 'Required to submit global overrides.  Must be valid as livepvrddata service sends emails to it.')
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_ENABLE, 'true', 'Enable Event Monitoring', 'Should SRE be monitoring supported events?  If false, SRE monitors nothing.')
@@ -92,72 +86,33 @@ public final class SrePlugin extends AbstractPlugin {
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_GEN_SYSMSG, 'false', 'Generate System Messages', 'Should SRE generate system messages when overrides may be needed or other errors are detected with the plugin?')
 		addProperty(p)
-		INSTANCE = this
-		Global.GetCurrentlyRecordingMediaFiles().each {
-			createMonitor(null, [MediaFile:it])
-		}
-		if(timer)
-			timer.cancel()
-		timer = new Timer(true)
-		timer.schedule(new DataStoreCleanupTask(), 10000, 3600000)
-		timer.schedule(new MonitorCleanupTask(), 120000, 3600000)
-		new Thread(new MonitorValidatorTask()).start()
+		plugin.start()
 	}
 	
 	@Override
 	void stop() {
 		super.stop()
-		synchronized(monitors) {
-			for(MonitorThread t : monitors)
-				stopThread(t)
-		}
-		monitors.clear()
-		if(timer) {
-			timer.cancel()
-			timer = null
-		}
+		plugin.stop()
 	}
 	
 	@SageEvent('RecordingScheduleChanged')
 	void validateMonitors(String eventName, Map args) {
-		new Thread(new MonitorValidatorTask()).start()
+		plugin.validateMonitors(eventName, args)
 	}
 	
 	@SageEvent('RecordingStarted')
 	void createMonitor(String eventName, Map args) {
-		if(!getMonitor(AiringAPI.GetAiringID(args['MediaFile']))) {
-			MonitorThread t = new MonitorThread(args['MediaFile'])
-			monitors.add(t)
-			t.start()
-			LOG.debug "Monitor started for ${args['MediaFile']}"
-		}
+		plugin.createMonitor(eventName, args)
 	}
 	
 	@SageEvent('RecordingStopped')
 	void stopMonitor(String eventName, Map args) {
-		stopThread(getMonitor(AiringAPI.GetAiringID(args['MediaFile'])))
-		LOG.debug "Monitor stopped for ${args['MediaFile']}"
+		plugin.stopMonitor(eventName, args)
 	}
 	
 	void resetMonitor(def airing) {
-		def t = getMonitor(AiringAPI.GetAiringID(airing))
-		if(t)
-			t.setUnmonitored false
+		plugin.resetMonitor(airing)
 	}
 	
-	private MonitorThread getMonitor(int id) {
-		synchronized(monitors) {
-			for(MonitorThread t : monitors)
-				if(t.airingId == id) return t
-		}
-		return null
-	}
-	
-	private void stopThread(MonitorThread t) {
-		if(t) {
-			if(t.isAlive())
-				t.interrupt()
-			monitors.remove t
-		}
-	}
+	List getMonitors() { return plugin.getMonitors() }
 }

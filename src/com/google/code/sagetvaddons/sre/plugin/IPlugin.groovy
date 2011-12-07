@@ -13,19 +13,14 @@
 *       See the License for the specific language governing permissions and
 *       limitations under the License.
 */
-package com.google.code.sagetvaddons.sre.tasks
+package com.google.code.sagetvaddons.sre.plugin
 
-import java.util.TimerTask
-
-import sagex.api.Global
-
-import com.google.code.sagetvaddons.sre.engine.DataStore
-
-class DataStoreCleanupTask extends TimerTask {
-
-	@Override
-	void run() {
-		if(!Global.IsClient())
-			DataStore.getInstance().clean()
-	}
+interface IPlugin {
+	void start()
+	void stop()
+	void validateMonitors(String eventName, Map args)
+	void createMonitor(String eventName, Map args)
+	void stopMonitor(String eventName, Map args)
+	void resetMonitor(def airing)
+	List getMonitors()
 }

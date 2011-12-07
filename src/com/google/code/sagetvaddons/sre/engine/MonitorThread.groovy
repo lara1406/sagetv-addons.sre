@@ -65,6 +65,10 @@ class MonitorThread extends Thread {
 
 	@Override
 	void run() {
+		if(Global.IsClient()) {
+			LOG.warn 'Halting monitor thread: Monitor threads refuse to run on SageClients!'
+			return
+		}
 		DataStore ds = DataStore.getInstance()
 		if(ds.getMonitorStatus(mediaFile) != MonitorStatus.COMPLETE) {
 			while(true) {

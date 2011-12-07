@@ -19,6 +19,8 @@ import java.util.TimerTask
 
 import org.apache.log4j.Logger
 
+import sagex.api.Global
+
 import com.google.code.sagetvaddons.sre.engine.MonitorThread
 import com.google.code.sagetvaddons.sre.plugin.SrePlugin
 
@@ -27,7 +29,11 @@ class MonitorCleanupTask extends TimerTask {
 	
 	@Override
 	public void run() {
-		def monitors = SrePlugin.INSTANCE.monitors
+		if(Global.IsClient()) {
+			LOG.warn 'Halting monitor cleanup task: Tasks refuse to run on SageClients'
+			return
+		}
+		def monitors = SrePlugin.INSTANCE.getMonitors()
 		synchronized(monitors) {
 			Iterator itr = monitors.iterator()
 			while(itr.hasNext()) {
