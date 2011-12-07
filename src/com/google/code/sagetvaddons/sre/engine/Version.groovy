@@ -22,7 +22,7 @@ import sagex.SageAPI
 class Version {
 	static private final String SRE_VER_ATTR = 'SRE-Version'
 	static private final String SRE_PATH_ATTR = 'SRE-SVN-Path'
-	static private final String SRE_JAR = (!SageAPI.isRemote() ? 'JARs/' : '') + 'sre-common.jar'
+	static private final String SRE_JAR = (!SageAPI.isRemote() ? 'JARs/' : '') + 'sre.jar'
 
 	static private final Version INSTANCE = new Version()
 	static Version get() { return INSTANCE }
