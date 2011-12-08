@@ -141,7 +141,7 @@ class MonitorThread extends Thread {
 
 	private List getAiringDetails() {
 		def info = []
-		def override = DataStore.getInstance().getOverride(mediaFile)
+		def override = DataStore.getInstance().getOverrideByObj(mediaFile)
 		if(override == null) {
 			info.add(AiringAPI.GetAiringTitle(mediaFile))
 			info.add(ShowAPI.GetShowEpisode(mediaFile))
@@ -206,7 +206,7 @@ class MonitorThread extends Thread {
 		if(isExtending) {
 			AiringAPI.SetRecordingTimes(mediaFile, AiringAPI.GetScheduleStartTime(mediaFile), AiringAPI.GetScheduleEndTime(mediaFile) + POLL_FREQ)
 			LOG.warn "${logPreamble()}: Error from web service; auto extended recording."
-		} else if(!defaultPaddingApplied && DataStore.getInstance().getMonitorStatus(mediaFile) != MonitorStatus.NO_MONITOR) {
+		} else if(!defaultPaddingApplied && DataStore.getInstance().getMonitorStatusByObj(mediaFile) != MonitorStatus.NO_MONITOR) {
 			applyDefaultPadding()
 			LOG.warn "${logPreamble()}: Error from web service; applied default padding."
 		} else
