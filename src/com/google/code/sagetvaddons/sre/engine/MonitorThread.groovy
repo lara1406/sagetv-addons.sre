@@ -19,6 +19,7 @@ import org.apache.log4j.Logger
 
 import sagex.api.AiringAPI
 import sagex.api.Configuration
+import sagex.api.Global
 import sagex.api.MediaFileAPI
 import sagex.api.ShowAPI
 

@@ -35,10 +35,12 @@ This plugin installs a web GUI app within the Jetty plugin for online viewing an
         	<Plugin>sagex-api</Plugin>
         	<MinVersion>7.1.9.0</MinVersion>
         </Dependency>
+        <!--
         <Dependency>
         	<Plugin>salicense</Plugin>
         	<MinVersion>1.1.0</MinVersion>
         </Dependency>
+        -->
         <Dependency>
         	<Plugin>livepvrdata4j</Plugin>
         	<MinVersion>1.0.0</MinVersion>
