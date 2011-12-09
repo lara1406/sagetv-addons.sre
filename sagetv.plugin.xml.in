@@ -43,7 +43,7 @@ This plugin installs a web GUI app within the Jetty plugin for online viewing an
         -->
         <Dependency>
         	<Plugin>livepvrdata4j</Plugin>
-        	<MinVersion>1.0.0</MinVersion>
+        	<MinVersion>5.0.0</MinVersion>
         </Dependency>
        <PluginType>Standard</PluginType>
        <Package>

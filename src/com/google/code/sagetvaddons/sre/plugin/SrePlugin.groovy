@@ -18,6 +18,7 @@ package com.google.code.sagetvaddons.sre.plugin
 import org.apache.log4j.Logger
 import org.apache.log4j.PropertyConfigurator
 
+import sage.SageTVPlugin
 import sage.SageTVPluginRegistry
 import sagex.SageAPI
 import sagex.api.Global
@@ -34,7 +35,8 @@ import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
  *
  */
 class SrePlugin extends AbstractPlugin {
-	static { PropertyConfigurator.configure((!SageAPI.isRemote() ? 'plugins/sre4/' : '') + 'sre4.log4j.properties') }
+	static private final LOG_CONFIG = (!SageAPI.isRemote() ? 'plugins/sre4/' : '') + 'sre4.log4j.properties'
+	static { PropertyConfigurator.configureAndWatch(LOG_CONFIG) }
 	static private final Logger LOG = Logger.getLogger(SrePlugin)
 	static private SrePlugin INSTANCE = null
 	static SrePlugin get() { return INSTANCE }
@@ -51,6 +53,9 @@ class SrePlugin extends AbstractPlugin {
 	static final String PROP_RM_MAN_FLAG = "${PROP_PREFIX}/rmManFlag"
 	static final String PROP_IGNORE_B2B = "${PROP_PREFIX}/ignoreB2B"
 	static final String PROP_GEN_SYSMSG = "${PROP_PREFIX}/genSysMsg"
+	static final String PROP_LOG_LEVEL = "${PROP_PREFIX}/logLevel"
+	
+	static private final String LOG4J_LEVEL_PROP = 'log4j.logger.com.google.code.sagetvaddons.sre'
 	
 	private IPlugin plugin
 	
@@ -68,6 +73,7 @@ class SrePlugin extends AbstractPlugin {
 		INSTANCE = this
 		PluginProperty p = new ServerStoredProperty(CONFIG_TEXT, PROP_EMAIL, '', 'Email Address', 'Required to submit global overrides.  Must be valid as livepvrddata service sends emails to it.')
 		addProperty(p)
+		addProperty(CONFIG_CHOICE, PROP_LOG_LEVEL, 'INFO', 'Logging Level', 'Select the logging level for this plugin.', ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'] as String[])
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_ENABLE, 'true', 'Enable Event Monitoring', 'Should SRE be monitoring supported events?  If false, SRE monitors nothing.')
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_LIVE_ONLY, 'false', 'Monitor Live Airings Only', 'Only monitor airings that are makred as live in the EPG data unless an override is defined for the airing.')
@@ -115,4 +121,25 @@ class SrePlugin extends AbstractPlugin {
 	}
 	
 	List getMonitors() { return plugin.getMonitors() }
+	
+	@Override
+	void setConfigValue(String name, String value) {
+		super.setConfigValue name, value
+		if(name == PROP_LOG_LEVEL) {
+			File f = new File(LOG_CONFIG)
+			Properties p = new Properties()
+			def reader = f.newReader()
+			p.load(reader)
+			reader.close()
+			p.setProperty(LOG4J_LEVEL_PROP, "$value, sre4App")
+			def writer = f.newWriter()
+			p.store writer
+			writer.close()
+		}
+	}
+	
+	@Override
+	String getConfigValue(String name) {
+		return name != PROP_LOG_LEVEL ? super.getConfigValue(name) : LOG.getEffectiveLevel().toString()
+	}
 }
