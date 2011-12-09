@@ -140,6 +140,12 @@ class SrePlugin extends AbstractPlugin {
 	
 	@Override
 	String getConfigValue(String name) {
-		return name != PROP_LOG_LEVEL ? super.getConfigValue(name) : LOG.getEffectiveLevel().toString()
+		if(name != PROP_LOG_LEVEL) return super.getConfigValue(name)
+		File f = new File(LOG_CONFIG)
+		Properties p = new Properties()
+		def reader = f.newReader()
+		p.load(reader)
+		reader.close()
+		return p.getProperty(LOG4J_LEVEL_PROP).split(',')[0].trim()
 	}
 }
