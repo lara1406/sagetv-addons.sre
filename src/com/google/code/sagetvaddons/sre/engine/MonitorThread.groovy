@@ -137,6 +137,8 @@ class MonitorThread extends Thread {
 			t.start()
 		} else if(LOG.isDebugEnabled())
 			LOG.debug "${logPreamble()}: Ignored manual flag removal; not required."
+		if(LOG.isTraceEnabled())
+			LOG.trace "wasMonitored: $wasMonitored, rmManFlag: ${Configuration.GetServerProperty(SrePlugin.PROP_RM_MAN_FLAG, 'true')}, isFav: ${AiringAPI.IsFavorite(mediaFile)}, isMan: ${AiringAPI.IsManualRecord(mediaFile)}"
 	}
 
 	private List getAiringDetails() {
