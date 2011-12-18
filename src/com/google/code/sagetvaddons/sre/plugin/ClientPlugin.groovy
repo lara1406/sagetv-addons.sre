@@ -16,23 +16,6 @@
 package com.google.code.sagetvaddons.sre.plugin
 
 import org.apache.log4j.Logger
-import org.apache.log4j.PropertyConfigurator
-
-import sage.SageTVPluginRegistry
-import sagex.SageAPI
-import sagex.api.AiringAPI
-import sagex.api.Global
-import sagex.plugin.AbstractPlugin
-import sagex.plugin.PluginProperty
-import sagex.plugin.SageEvent
-
-import com.google.code.sagetvaddons.sre.engine.DataStore
-import com.google.code.sagetvaddons.sre.engine.MonitorThread
-import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
-import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
-import com.google.code.sagetvaddons.sre.tasks.DataStoreCleanupTask
-import com.google.code.sagetvaddons.sre.tasks.MonitorCleanupTask
-import com.google.code.sagetvaddons.sre.tasks.MonitorValidatorTask
 
 /**
  * @author dbattams

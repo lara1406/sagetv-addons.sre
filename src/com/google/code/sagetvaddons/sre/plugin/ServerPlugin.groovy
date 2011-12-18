@@ -26,7 +26,7 @@ import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
 
-import com.google.code.sagetvaddons.sre.engine.MonitorThread
+import com.google.code.sagetvaddons.sre.engine.MonitorTask
 import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
 import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
 import com.google.code.sagetvaddons.sre.tasks.DataStoreCleanupTask
@@ -52,22 +52,18 @@ final class ServerPlugin implements IPlugin {
 	}
 	
 	void start() {
-		Global.GetCurrentlyRecordingMediaFiles().each {
-			createMonitor(null, [MediaFile:it])
-		}
 		if(timer)
 			timer.cancel()
 		timer = new Timer(true)
 		timer.schedule(new DataStoreCleanupTask(), 10000, 3600000)
 		timer.schedule(new MonitorCleanupTask(), 120000, 3600000)
 		new Thread(new MonitorValidatorTask()).start()
+		Global.GetCurrentlyRecordingMediaFiles().each {
+			createMonitor(null, [MediaFile:it])
+		}
 	}
 	
 	void stop() {
-		synchronized(monitors) {
-			for(MonitorThread t : monitors)
-				stopThread(t)
-		}
 		monitors.clear()
 		if(timer) {
 			timer.cancel()
@@ -81,15 +77,18 @@ final class ServerPlugin implements IPlugin {
 	
 	void createMonitor(String eventName, Map args) {
 		if(!getMonitor(AiringAPI.GetAiringID(args['MediaFile']))) {
-			MonitorThread t = new MonitorThread(args['MediaFile'])
+			MonitorTask t = new MonitorTask(args['MediaFile'])
 			monitors.add(t)
-			t.start()
+			def startTime = AiringAPI.GetScheduleStartTime(args['MediaFile'])
+			while(startTime <= System.currentTimeMillis())
+				startTime += MonitorTask.POLL_FREQ
+			timer.scheduleAtFixedRate(t, new Date(startTime - MonitorTask.POLL_FREQ), MonitorTask.POLL_FREQ)
 			LOG.debug "Monitor started for ${args['MediaFile']}"
 		}
 	}
 	
 	void stopMonitor(String eventName, Map args) {
-		stopThread(getMonitor(AiringAPI.GetAiringID(args['MediaFile'])))
+		stopMonitorTask(getMonitor(AiringAPI.GetAiringID(args['MediaFile'])))
 		LOG.debug "Monitor stopped for ${args['MediaFile']}"
 	}
 	
@@ -101,18 +100,17 @@ final class ServerPlugin implements IPlugin {
 	
 	List getMonitors() { return monitors }
 	
-	private MonitorThread getMonitor(int id) {
+	private MonitorTask getMonitor(int id) {
 		synchronized(monitors) {
-			for(MonitorThread t : monitors)
+			for(MonitorTask t : monitors)
 				if(t.airingId == id) return t
 		}
 		return null
 	}
 	
-	private void stopThread(MonitorThread t) {
+	private void stopMonitorTask(MonitorTask t) {
 		if(t) {
-			if(t.isAlive())
-				t.interrupt()
+			t.cancel()
 			monitors.remove t
 		}
 	}

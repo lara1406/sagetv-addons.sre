@@ -19,9 +19,11 @@ import java.util.TimerTask
 
 import org.apache.log4j.Logger
 
+import sagex.api.AiringAPI
 import sagex.api.Global
+import sagex.api.MediaFileAPI
 
-import com.google.code.sagetvaddons.sre.engine.MonitorThread
+import com.google.code.sagetvaddons.sre.engine.MonitorTask
 import com.google.code.sagetvaddons.sre.plugin.SrePlugin
 
 class MonitorCleanupTask extends TimerTask {
@@ -34,14 +36,17 @@ class MonitorCleanupTask extends TimerTask {
 			return
 		}
 		def monitors = SrePlugin.INSTANCE.getMonitors()
+		def i = 0
 		synchronized(monitors) {
 			Iterator itr = monitors.iterator()
 			while(itr.hasNext()) {
-				MonitorThread t = itr.next()
-				if(!t.isAlive())
+				def mf = AiringAPI.GetMediaFileForAiring(AiringAPI.GetAiringForID(itr.next().airingId))
+				if(mf == null || !MediaFileAPI.IsFileCurrentlyRecording(mf)) {
+					++i
 					itr.remove()
+				}
 			}
 		}
-		LOG.debug 'Dead monitor threads have been cleaned.'
+		LOG.debug "Dead monitor threads have been cleaned. [$i removed]"
 	}
 }

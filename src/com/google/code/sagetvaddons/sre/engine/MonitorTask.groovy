@@ -28,8 +28,8 @@ import com.google.code.sagetvaddons.sre.plugin.SrePlugin
 import com.livepvrdata.data.net.resp.Response
 import com.livepvrdata.data.net.resp.StatusResponse
 
-class MonitorThread extends Thread {
-	static private final Logger LOG = Logger.getLogger(MonitorThread)
+class MonitorTask extends TimerTask {
+	static private final Logger LOG = Logger.getLogger(MonitorTask)
 
 	static private final int POLL_FREQ = 120000
 
@@ -43,7 +43,7 @@ class MonitorThread extends Thread {
 	private boolean defaultPaddingApplied
 	private boolean wasMonitored
 
-	MonitorThread(def mediaFile) {
+	MonitorTask(def mediaFile) {
 		this.mediaFile = mediaFile
 		airingId = AiringAPI.GetAiringID(this.mediaFile)
 		unmonitored = false
@@ -52,9 +52,6 @@ class MonitorThread extends Thread {
 		isExtending = false
 		defaultPaddingApplied = false
 		wasMonitored = false
-
-		setDaemon(true)
-		setName("SREv4-Monitor-$airingId")
 	}
 
 	synchronized boolean isUnmonitored() { return unmonitored }
@@ -65,59 +62,57 @@ class MonitorThread extends Thread {
 	}
 
 	@Override
+	boolean cancel() {
+		LOG.trace "${logPreamble()}: Task cancelled"
+		return super.cancel()
+	}
+	
 	void run() {
+		LOG.debug "${logPreamble()}: Execution started."
 		if(Global.IsClient()) {
 			LOG.warn 'Halting monitor thread: Monitor threads refuse to run on SageClients!'
+			haltMonitor(false, false)
 			return
 		}
 		DataStore ds = DataStore.getInstance()
 		if(ds.getMonitorStatusByObj(mediaFile) != MonitorStatus.COMPLETE) {
-			while(true) {
-				if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
-					LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
-					break
-				}
-				if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
-					if(!isUnmonitored()) {
-						boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
-						if(!ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
-							setUnmonitored(true)
-							LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
-						} else {
-							try {
-								def data = getAiringDetails()
-								LOG.debug "${logPreamble()}: Fetching status with data: $data"
-								response = clnt.getStatus(data[0], data[1], new Date(data[2]))
-								if(response == null) {
-									wasMonitored = false
-									setUnmonitored(true)
-									LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."
-								} else {
-									wasMonitored = true
-									setUnmonitored(false)
-								}
-								processResponse()
-							} catch(IOException e) {
-								LOG.error "${logPreamble()}: IOError", e
-								handleErrorResponse()
+			if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
+				LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
+				haltMonitor()
+				return
+			}
+			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
+				if(!isUnmonitored()) {
+					boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
+					if(!ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
+						setUnmonitored(true)
+						LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
+					} else {
+						try {
+							def data = getAiringDetails()
+							LOG.debug "${logPreamble()}: Fetching status with data: $data"
+							response = clnt.getStatus(data[0], data[1], new Date(data[2]))
+							if(response == null) {
+								wasMonitored = false
+								setUnmonitored(true)
+								LOG.info "${logPreamble()}: Monitor disabled because it is an unmonitored event."
+							} else {
+								wasMonitored = true
+								setUnmonitored(false)
 							}
+							processResponse()
+						} catch(IOException e) {
+							LOG.error "${logPreamble()}: IOError", e
+							handleErrorResponse()
 						}
 					}
-				} else {
-					LOG.info "${logPreamble()}: Monitor disabled because ignore back to back is enabled and the next airing is scheduled to record."
 				}
-				try {
-					LOG.debug "${logPreamble()}: Sleeping for ${POLL_FREQ / 1000} seconds."
-					Thread.sleep POLL_FREQ
-				} catch(InterruptedException e) {
-					LOG.warn "${logPreamble()}: Monitor halting because of interrupt signal."
-					break
-				}
+			} else {
+				LOG.info "${logPreamble()}: Monitor disabled because ignore back to back is enabled and the next airing is scheduled to record."
 			}
-			rmManualRecFlag()
-			ds.setMonitorStatus(mediaFile, MonitorStatus.COMPLETE)
 		} else
 			LOG.warn "${logPreamble()}: Terminating monitor because this airing has already had a completed monitor!"
+		LOG.debug "${logPreamble()}: Execution completed."	
 	}
 
 	private void rmManualRecFlag() {
@@ -184,6 +179,7 @@ class MonitorThread extends Thread {
 		AiringAPI.SetRecordingTimes(mediaFile, AiringAPI.GetScheduleStartTime(mediaFile), end)
 		LOG.info "${logPreamble()}: Recording scheduled to end at ${new Date(end)} [${postPad / 60000L} mins post padding applied]"
 		setUnmonitored(true)
+		haltMonitor()
 	}
 
 	private long getPostGamePadding() {
@@ -225,5 +221,13 @@ class MonitorThread extends Thread {
 
 	private String logPreamble() {
 		return "${airingId}/${AiringAPI.GetAiringTitle(mediaFile)}"
+	}
+	
+	private void haltMonitor(boolean rmFlag = true, boolean setComplete = true) {
+		cancel()
+		if(rmFlag)
+			rmManualRecFlag()
+		if(setComplete)
+			DataStore.getInstance().setMonitorStatus(mediaFile, MonitorStatus.COMPLETE)		
 	}
 }
