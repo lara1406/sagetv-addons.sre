@@ -84,7 +84,7 @@ class MonitorTask extends TimerTask {
 			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
 				if(!isUnmonitored()) {
 					boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
-					if(!ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
+					if(SrePlugin.INSTANCE.licensed && !ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
 						setUnmonitored(true)
 						LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
 					} else {
@@ -168,7 +168,7 @@ class MonitorTask extends TimerTask {
 
 	private void stopRecording() {
 		long end
-		long postPad = getPostGamePadding()
+		long postPad = SrePlugin.INSTANCE.licensed ? getPostGamePadding() : 0L
 		if(System.currentTimeMillis() < AiringAPI.GetAiringEndTime(mediaFile) && !Configuration.GetServerProperty(SrePlugin.PROP_END_EARLY, 'false').toBoolean()) {
 			end = AiringAPI.GetScheduleEndTime(mediaFile) + postPad
 			LOG.info "${logPreamble()}: Event is over, but end early is disabled; applying post game padding only."

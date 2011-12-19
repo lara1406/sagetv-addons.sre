@@ -15,10 +15,10 @@
 */
 package com.google.code.sagetvaddons.sre.plugin
 
+
 import org.apache.log4j.Logger
 import org.apache.log4j.PropertyConfigurator
 
-import sage.SageTVPlugin
 import sage.SageTVPluginRegistry
 import sagex.SageAPI
 import sagex.api.Global
@@ -26,6 +26,7 @@ import sagex.plugin.AbstractPlugin
 import sagex.plugin.PluginProperty
 import sagex.plugin.SageEvent
 
+import com.google.code.sagetvaddons.license.License
 import com.google.code.sagetvaddons.sre.engine.DataStore
 import com.google.code.sagetvaddons.sre.plugin.properties.ServerStoredProperty
 import com.google.code.sagetvaddons.sre.plugin.validators.IntegerRangeValidator
@@ -58,6 +59,7 @@ class SrePlugin extends AbstractPlugin {
 	static private final String LOG4J_LEVEL_PROP = 'log4j.logger.com.google.code.sagetvaddons.sre'
 	
 	private IPlugin plugin
+	boolean licensed
 	
 	/**
 	 * @param registry
@@ -67,23 +69,30 @@ class SrePlugin extends AbstractPlugin {
 		plugin = !Global.IsClient() ? new ServerPlugin() : new ClientPlugin()
 	}
 	
+	private void setLicensed(boolean b) {}
+	
 	@Override
 	void start() {
 		super.start()
+		licensed = License.isLicensed('sre4').isLicensed()
 		INSTANCE = this
 		PluginProperty p = new ServerStoredProperty(CONFIG_TEXT, PROP_EMAIL, '', 'Email Address', 'Required to submit global overrides.  Must be valid as livepvrddata service sends emails to it.')
 		addProperty(p)
 		addProperty(CONFIG_CHOICE, PROP_LOG_LEVEL, 'INFO', 'Logging Level', 'Select the logging level for this plugin.', ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'] as String[])
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_ENABLE, 'true', 'Enable Event Monitoring', 'Should SRE be monitoring supported events?  If false, SRE monitors nothing.')
 		addProperty(p)
-		p = new ServerStoredProperty(CONFIG_BOOL, PROP_LIVE_ONLY, 'false', 'Monitor Live Airings Only', 'Only monitor airings that are makred as live in the EPG data unless an override is defined for the airing.')
-		addProperty(p)
+		if(licensed) {
+			p = new ServerStoredProperty(CONFIG_BOOL, PROP_LIVE_ONLY, 'false', 'Monitor Live Airings Only', 'Only monitor airings that are makred as live in the EPG data unless an override is defined for the airing.')
+			addProperty(p)
+		}
 		p = new ServerStoredProperty(CONFIG_INTEGER, PROP_DEFAULT_PAD, '60', 'Default Padding (mins)', 'Default padding for recordings that should, but can\'t be monitored (network issues, etc.).', new IntegerRangeValidator(0, 360))
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_INTEGER, PROP_MAX_EXTENSION, '8', 'Maximum Extention Time (hours)', 'Maximum number of hours a recording can be extended by this plugin.', new IntegerRangeValidator(1, 16))
 		addProperty(p)
-		p = new ServerStoredProperty(CONFIG_INTEGER, PROP_POST_PAD, '0', 'Post Game Padding (mins)', 'How many minutes should SRE pad a recording after it\'s over?  Zero means no extra pad.  Use this for \'post game show\' type padding.', new IntegerRangeValidator(0, 120))
-		addProperty(p)
+		if(licensed) {
+			p = new ServerStoredProperty(CONFIG_INTEGER, PROP_POST_PAD, '0', 'Post Game Padding (mins)', 'How many minutes should SRE pad a recording after it\'s over?  Zero means no extra pad.  Use this for \'post game show\' type padding.', new IntegerRangeValidator(0, 120))
+			addProperty(p)
+		}
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_END_EARLY, 'false', 'End Recordings Early', 'Should SRE end monitored recordings early if the event ends early?')
 		addProperty(p)
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_RM_MAN_FLAG, 'true', 'Remove Manual Flag for Favourites', 'Should SRE remove the manual flag for monitored favourites when the recording ends?')
@@ -93,6 +102,7 @@ class SrePlugin extends AbstractPlugin {
 		p = new ServerStoredProperty(CONFIG_BOOL, PROP_GEN_SYSMSG, 'false', 'Generate System Messages', 'Should SRE generate system messages when overrides may be needed or other errors are detected with the plugin?')
 		addProperty(p)
 		plugin.start()
+		LOG.debug("IsLicensed: $licensed")
 	}
 	
 	@Override

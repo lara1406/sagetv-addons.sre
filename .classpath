@@ -14,5 +14,6 @@
 	<classpathentry kind="var" path="SAGELIB/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="var" path="SAGELIB/json.jar"/>
 	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
+	<classpathentry kind="var" path="SAGELIB/salicense.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
