@@ -57,7 +57,8 @@ This plugin installs a web GUI app within the Jetty plugin for online viewing an
        			<Overwrite>false</Overwrite>
        </Package>
 		<ImplementationClass>com.google.code.sagetvaddons.sre.plugin.SrePlugin</ImplementationClass>
-       	<ReleaseNotes>
-Initial beta release.
-       	</ReleaseNotes>
+       	<ReleaseNotes><![CDATA[
+* Fixes issue 321: Ignore front half of back to back recordings wasn't working properly
+* Fix bug where once a monitor was marked as 'idle' it would never come out of that state
+       	]]></ReleaseNotes>
 </SageTVPlugin>

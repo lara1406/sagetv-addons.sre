@@ -42,6 +42,7 @@ class MonitorTask extends TimerTask {
 	private boolean isExtending
 	private boolean defaultPaddingApplied
 	private boolean wasMonitored
+	private boolean hasOverride
 
 	MonitorTask(def mediaFile) {
 		this.mediaFile = mediaFile
@@ -52,8 +53,13 @@ class MonitorTask extends TimerTask {
 		isExtending = false
 		defaultPaddingApplied = false
 		wasMonitored = false
+		hasOverride = false
 	}
 
+	synchronized boolean getHasOverride() { return hasOverride }
+	
+	synchronized void setHasOverride(boolean b) { hasOverride = b }
+	
 	synchronized boolean isUnmonitored() { return unmonitored }
 
 	synchronized void setUnmonitored(boolean b) {
@@ -81,10 +87,11 @@ class MonitorTask extends TimerTask {
 				haltMonitor()
 				return
 			}
-			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || !AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
-				if(!isUnmonitored()) {
+			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
+				if(!isUnmonitored() || getHasOverride() != ds.hasOverride(mediaFile)) {
+					setHasOverride(ds.hasOverride(mediaFile))
 					boolean monitorLiveOnly = Boolean.parseBoolean(Configuration.GetServerProperty(SrePlugin.PROP_LIVE_ONLY, 'false'))
-					if(SrePlugin.INSTANCE.licensed && !ds.hasOverride(mediaFile) && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
+					if(SrePlugin.INSTANCE.licensed && !getHasOverride() && monitorLiveOnly && !AiringAPI.IsAiringAttributeSet(mediaFile, 'Live')) {
 						setUnmonitored(true)
 						LOG.info "${logPreamble()}: Monitor disabled because live only is enabled and there is no override defined."
 					} else {
@@ -106,10 +113,10 @@ class MonitorTask extends TimerTask {
 							handleErrorResponse()
 						}
 					}
-				}
-			} else {
+				} else if(LOG.isTraceEnabled())
+					LOG.trace "${logPreamble()}: Monitor is idle because unmonitored = true and no new override detected."
+			} else
 				LOG.info "${logPreamble()}: Monitor disabled because ignore back to back is enabled and the next airing is scheduled to record."
-			}
 		} else
 			LOG.warn "${logPreamble()}: Terminating monitor because this airing has already had a completed monitor!"
 		LOG.debug "${logPreamble()}: Execution completed."	
