@@ -130,7 +130,7 @@ class MonitorTask extends TimerTask {
 								LOG.debug "${logPreamble()}: Waiting to remove manual flag because the recording is still active."
 								sleep 15000
 							}
-							AiringAPI.Record(mediaFile)
+							AiringAPI.CancelRecord(mediaFile)
 							LOG.info "${logPreamble()}: Manual recording flag removed."
 						}
 					})
