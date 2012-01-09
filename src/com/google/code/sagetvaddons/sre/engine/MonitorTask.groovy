@@ -43,6 +43,7 @@ class MonitorTask extends TimerTask {
 	private boolean defaultPaddingApplied
 	private boolean wasMonitored
 	private boolean hasOverride
+	private boolean liveOrIrHandled
 
 	MonitorTask(def mediaFile) {
 		this.mediaFile = mediaFile
@@ -54,6 +55,7 @@ class MonitorTask extends TimerTask {
 		defaultPaddingApplied = false
 		wasMonitored = false
 		hasOverride = false
+		liveOrIrHandled = false
 	}
 
 	synchronized boolean getHasOverride() { return hasOverride }
@@ -85,6 +87,13 @@ class MonitorTask extends TimerTask {
 			if(!MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
 				LOG.info "${logPreamble()}: Halting monitor because recording has stopped."
 				haltMonitor()
+				return
+			}
+			if(AiringAPI.IsNotManualOrFavorite(mediaFile)) {
+				if(!liveOrIrHandled) {
+					LOG.info "${logPreamble()}: Monitor disabled because this recording is live tv or an IR recording"
+					liveOrIrHandled = true
+				}
 				return
 			}
 			if(!Configuration.GetServerProperty(SrePlugin.PROP_IGNORE_B2B, 'false').toBoolean() || AiringAPI.IsNotManualOrFavorite(AiringAPI.GetAiringOnAfter(mediaFile))) {
