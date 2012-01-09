@@ -220,9 +220,8 @@ class MonitorTask extends TimerTask {
 
 	private void applyDefaultPadding(boolean forcePad = false) {
 		long pad = Configuration.GetServerProperty(SrePlugin.PROP_DEFAULT_PAD, '0').toLong()
-		if(pad > 0 && (response != null || forcePad)) {
-			AiringAPI.SetRecordingTimes(mediaFile, AiringAPI.GetScheduleStartTime(mediaFile), AiringAPI.GetScheduleEndTime(mediaFile) + (60000L * pad))
-		}
+		if(pad > 0 && (response != null || forcePad))
+			AiringAPI.SetRecordingTimes(mediaFile, AiringAPI.GetScheduleStartTime(mediaFile), AiringAPI.GetAiringEndTime(mediaFile) + (60000L * pad))
 		defaultPaddingApplied = true
 	}
 
