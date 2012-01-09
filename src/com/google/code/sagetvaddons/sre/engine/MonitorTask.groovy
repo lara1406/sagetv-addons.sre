@@ -106,7 +106,7 @@ class MonitorTask extends TimerTask {
 					} else {
 						try {
 							def data = getAiringDetails()
-							LOG.debug "${logPreamble()}: Fetching status with data: $data"
+							LOG.info "${logPreamble()}: Fetching status with data: $data"
 							response = clnt.getStatus(data[0], data[1], new Date(data[2]))
 							if(response == null) {
 								wasMonitored = false
