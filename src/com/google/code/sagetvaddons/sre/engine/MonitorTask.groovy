@@ -1,5 +1,5 @@
 /*
- *      Copyright 2011 Battams, Derek
+ *      Copyright 2011-2012 Battams, Derek
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -138,6 +138,10 @@ class MonitorTask extends TimerTask {
 							while(MediaFileAPI.IsFileCurrentlyRecording(mediaFile)) {
 								LOG.debug "${logPreamble()}: Waiting to remove manual flag because the recording is still active."
 								sleep 15000
+							}
+							while(AiringAPI.GetAiringEndTime(mediaFile) >= System.currentTimeMillis()) {
+								LOG.debug "${logPreamble()}: Waiting until scheduled end time of recording passed before removing manual flag."
+								sleep (AiringAPI.GetAiringEndTime(mediaFile) - System.currentTimeMillis() + 250)
 							}
 							AiringAPI.CancelRecord(mediaFile)
 							LOG.info "${logPreamble()}: Manual recording flag removed."

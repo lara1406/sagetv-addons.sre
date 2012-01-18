@@ -58,8 +58,6 @@ This plugin installs a web GUI app within the Jetty plugin for online viewing an
        </Package>
 		<ImplementationClass>com.google.code.sagetvaddons.sre.plugin.SrePlugin</ImplementationClass>
        	<ReleaseNotes><![CDATA[
-* Issue 330: Fix bug where manual recording flag was not being removed properly
-* Issue 332: Prevent default padding from being applied multiple times under certain conditions
-* Issue 333: Regression: SRE stopped skipping monitoring of live tv and IR recordings
+* Issue 336: Don't remove manual recording flag until the scheduled end time of the airing has passed
        	]]></ReleaseNotes>
 </SageTVPlugin>
